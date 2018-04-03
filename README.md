@@ -17,7 +17,8 @@ On the analysis side, pyprf_motion offers some additional features made necessar
 | [NiBabel](http://nipy.org/nibabel/)  | 2.0.2          |
 
 ## How to use
-1. Record fMRI data: The PsychoPy scripts in the Stimulation folder can be used for presenting appropriate visual stimuli.
+1. Record fMRI data: The PsychoPy scripts in the stimulus_presentation folder can be used for presenting appropriate visual stimuli.
+<img src="logo/demo_stim_pyprf_motion.png" width=200 align="center" />
 
 2. Prepare the PNG presentation files
 
