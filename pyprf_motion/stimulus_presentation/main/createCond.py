@@ -8,7 +8,7 @@ Created on Thu Jun 23 16:21:45 2016
 from __future__ import division  # so that 1/3=0.333 instead of 1/3=0
 import numpy as np
 import os
-import config_MotLoc as cfg
+import config as cfg
 from utils import balancedLatinSquares
 
 

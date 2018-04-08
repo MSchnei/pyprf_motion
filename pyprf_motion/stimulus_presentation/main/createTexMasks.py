@@ -7,7 +7,7 @@ from __future__ import division  # so that 1/3=0.333 instead of 1/3=0
 import os
 import numpy as np
 from PIL import Image
-import config_MotLoc as cfg
+import config as cfg
 from utils import (carrierPattern, createBinCircleMask,  getDistIma,
                    assignBorderVals)
 

@@ -11,7 +11,7 @@ import os
 import numpy as np
 from psychopy import visual, event, core,  monitors, logging, gui, data, misc
 from scipy import signal
-import config_MotLoc as cfg
+import config as cfg
 
 # %% SAVING and LOGGING
 
