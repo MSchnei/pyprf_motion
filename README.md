@@ -5,7 +5,7 @@ Population receptive field analysis for motion-sensitive early- and mid-level vi
 
 This is an extension of the [pyprf package](https://github.com/ingo-m/pypRF).
 Compared to pyprf, pyprf_motion offers stimuli that were specifically optimized to elicit responses from motion-sensitive areas.
-On the analysis side, pyprf_motion offers some additional features made necessary by the different stimulation type (model positions defined in polar coordinates, sub-TR temporal resolution, cross-validation) at the cost of some speed and flexibility.
+On the analysis side, pyprf_motion offers some additional features made necessary by the different stimulation type (predictors for target button presses, model positions defined in polar coordinates, sub-TR temporal resolution for model creation, cross-validation for model fitting) at the cost of some speed and flexibility.
 
 ## Dependencies
 [**Python 2.7**](https://www.python.org/download/releases/2.7/)
