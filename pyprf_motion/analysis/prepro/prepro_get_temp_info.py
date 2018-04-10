@@ -1,11 +1,22 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+
 """
 This pre-processing script does the following:
 - load conditions.npz
 - run cumulative sum on durations
 - write a single text file per run
 - write a cumulative text file for all runs
+
+Input:
+- path to parent folder
+- time to repeat (TR) in fMRI experiment
+- stimulation time per TR
+- Conditions_MotLoc_run01.npz
+
+Output
+- single text file per run
+- cumulative text file for all runs
 """
 
 import os

@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+
 """
 This pre-processing script does the following:
 - load Conditions.npz and load Masks.npz
@@ -13,7 +14,6 @@ Input:
 
 Output
 - png files, one per TR
-
 """
 
 import os
