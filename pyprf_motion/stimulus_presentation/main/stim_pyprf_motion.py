@@ -108,7 +108,7 @@ logFile.write('fieldSizeinPix=' + unicode(fieldSizeinPix) + '\n')
 
 strPathParentUp = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..'))
-filename = os.path.join(strPathParentUp, 'Conditions',
+filename = os.path.join(strPathParentUp, 'conditions',
                         'Conditions_MotLoc_run' + str(expInfo['run']) +
                         '.npz')
 npzfile = np.load(filename)
@@ -138,7 +138,7 @@ logFile.write('positions=' + unicode(positions) + '\n')
 # %% TEXTURE AND MASKS
 
 # retrieve the different textures
-filename = os.path.join(strPathParentUp, 'MaskTextures',
+filename = os.path.join(strPathParentUp, 'maskTextures',
                         'Textures_MotLoc.npz')
 npzfile = np.load(filename)
 horiBar = npzfile["horiBar"].astype('int8')
@@ -146,7 +146,7 @@ vertiBar = npzfile["vertiBar"].astype('int8')
 wedge = npzfile["wedge"].astype('int8')
 
 # retrieve the different masks
-filename = os.path.join(strPathParentUp, 'MaskTextures',
+filename = os.path.join(strPathParentUp, 'maskTextures',
                         'Masks_MotLoc.npz')
 npzfile = np.load(filename)
 horiBarMasks = npzfile["horiBarMasks"].astype('float16')
