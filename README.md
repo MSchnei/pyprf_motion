@@ -10,11 +10,13 @@ On the analysis side, pyprf_motion offers some additional features made necessar
 ## Dependencies
 [**Python 2.7**](https://www.python.org/download/releases/2.7/)
 
-| Package                              | Tested version |
-|--------------------------------------|----------------|
-| [NumPy](http://www.numpy.org/)       | 1.11.1         |
-| [SciPy](http://www.scipy.org/)       | 0.18.0         |
-| [NiBabel](http://nipy.org/nibabel/)  | 2.0.2          |
+| Package                                   | Tested version |
+|-------------------------------------------|----------------|
+| [NumPy](http://www.numpy.org/)            | 1.14.0         |
+| [SciPy](http://www.scipy.org/)            | 1.0.0          |
+| [NiBabel](http://nipy.org/nibabel/)       | 2.2.1          |
+| [cython](http://cython.org/)              | 0.27.1         |
+| [tensorflow](https://www.tensorflow.org/) | 1.4.0          |
 
 ## How to use
 ### 1. Present stimuli and record fMRI data
