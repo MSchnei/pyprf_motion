@@ -12,15 +12,68 @@ import os
 import numpy as np
 
 # %% set parameters
-strPathParent = "/media/sf_D_DRIVE/MotDepPrf/Analysis/S02"
-varRun = 1
-strPathCond = os.path.join(strPathParent, '03_MotLoc', 'expInfo',
-                           'Conditions_MotLoc_run0' + str(varRun) + '.npz')
+strPthPrnt = "/media/sf_D_DRIVE/MotDepPrf/Analysis/S02"
 
-# %% load conditions file
-npzfile = np.load(strPathCond)
-aryCond = npzfile["conditions"].astype('int8')
+# provide name of motLoc files in the order that they were shown
+lstMotLoc = [
+    "Conditions_MotLoc_run01.npz",
+    "Conditions_MotLoc_run02.npz",
+    "Conditions_MotLoc_run03.npz",
+    "Conditions_MotLoc_run04.npz",
+    ]
 
-# aryCond is a varNrCond x 2 array. The first column contains the index for the
-# spatial aperture, the second contains the index for the type of the aperture
-# (vertical bar, horizontal bar, wedge)
+# provide the TR in seconds
+varTr = 2.
+
+# provide the stimulation time
+varStmTm = 1.5
+
+# %% load conditions files
+
+# deduce path to conditions file
+strPthCond = os.path.join(strPthPrnt, '03_MotLoc', 'expInfo')
+
+# Loop through npz files in target directory:
+lstCond = []
+for ind, cond in enumerate(lstMotLoc):
+    inputFile = os.path.join(strPthCond, cond)
+    # extract condition
+    aryTmp = np.load(inputFile)["conditions"].astype('int8')
+    # create empty array
+    aryTmpCond = np.empty((len(aryTmp), 3), dtype='float16')
+    # get the condition nr
+    aryTmpCond[:, 0] = aryTmp[:, 0] + aryTmp[:, 1] * np.max(aryTmp[:, 0])
+    # get the onset time
+    aryTmpCond[:, 1] = np.cumsum(np.ones(len(aryTmp))*varTr) - varTr
+    # get the duration
+    aryTmpCond[:, 2] = np.ones(len(aryTmp))*varStmTm
+    # create txt file
+    strPthTxtFle = os.path.join(strPthPrnt, '03_MotLoc', 'expInfo', 'tmpInfo',
+                                'run_' + str(ind + 1) + '_txt_eventmatrix.txt')
+    np.savetxt(strPthTxtFle, aryTmpCond, delimiter=" ", fmt="%1.2f")
+    # append condition to list
+    lstCond.append(aryTmp)
+
+# join conditions across runs
+aryCond = np.vstack(lstCond)
+
+# %% create aryTmpCond
+
+# create empty array
+aryTmpCondAll = np.empty((len(aryCond), 3), dtype='float16')
+# get the condition nr
+aryTmpCondAll[:, 0] = aryCond[:, 0] + aryCond[:, 1] * np.max(aryCond[:, 0])
+# get the onset time
+aryTmpCondAll[:, 1] = np.cumsum(np.ones(len(aryCond))*varTr) - varTr
+# get the duration
+aryTmpCondAll[:, 2] = np.ones(len(aryCond))*varStmTm
+
+# aryTmpCondAll is a varNrCond x 3 array. The first column contains the index
+# for the condition number, the second contains the onset time of the condition
+# with respect to the start of the first run in [s] and the last column
+# contains the duration
+
+# %% create txt file
+strPthTxtFle = os.path.join(strPthPrnt, '03_MotLoc', 'expInfo', 'tmpInfo',
+                            'run_all_txt_eventmatrix.txt')
+np.savetxt(strPthTxtFle, aryTmpCondAll, delimiter=" ", fmt="%1.2f")
