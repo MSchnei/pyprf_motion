@@ -2,7 +2,7 @@
 
 """Main functions for hrf."""
 
-# Part of py_pRF_motion library
+# Part of pyprf_motion library
 # Copyright (C) 2016  Marian Schneider, Ingo Marquardt
 #
 # Functions spm_hrf_compat, spmt, dspmt, ddspmt were copied from nipy
@@ -25,7 +25,6 @@ from functools import partial
 import numpy as np
 import scipy.stats as sps
 from scipy.interpolate import interp1d
-from scipy.stats import gamma
 
 
 # %% Hrf functions for convultion taken from nipy
@@ -140,15 +139,15 @@ def ddspmt(t):
 
 
 # %% functions for convultion
-def cnvlTc(idxPrc,
-           aryPrfTcChunk,
-           lstHrf,
-           varTr,
-           varNumVol,
-           queOut,
-           varOvsmpl=10,
-           varHrfLen=32,
-           ):
+def cnvl_tc(idxPrc,
+            aryPrfTcChunk,
+            lstHrf,
+            varTr,
+            varNumVol,
+            queOut,
+            varOvsmpl=10,
+            varHrfLen=32,
+            ):
     """
     Convolution of time courses with HRF model.
     """
@@ -210,83 +209,6 @@ def cnvlTc(idxPrc,
 
     # determine output shape
     tplOutShp = tplInpShp[:-1] + (len(lstHrf), ) + (tplInpShp[-1], )
-
-    # Create list containing the convolved timecourses, and the process ID:
-    lstOut = [idxPrc,
-              aryConv.reshape(tplOutShp)]
-
-    # Put output to queue:
-    queOut.put(lstOut)
-
-
-# %%
-# The following two functions are old legacy functions
-# They are now replaced by the function cnvlTc
-
-def funcHrf(varNumVol, varTr):
-    """Create double gamma function.
-
-    Source:
-    http://www.jarrodmillman.com/rcsds/lectures/convolution_background.html
-    """
-    vecX = np.arange(0, varNumVol, 1)
-
-    # Expected time of peak of HRF [s]:
-    varHrfPeak = 6.0 / varTr
-    # Expected time of undershoot of HRF [s]:
-    varHrfUndr = 12.0 / varTr
-    # Scaling factor undershoot (relative to peak):
-    varSclUndr = 0.35
-
-    # Gamma pdf for the peak
-    vecHrfPeak = gamma.pdf(vecX, varHrfPeak)
-    # Gamma pdf for the undershoot
-    vecHrfUndr = gamma.pdf(vecX, varHrfUndr)
-    # Combine them
-    vecHrf = vecHrfPeak - varSclUndr * vecHrfUndr
-
-    # Scale maximum of HRF to 1.0:
-    vecHrf = np.divide(vecHrf, np.max(vecHrf))
-
-    return vecHrf
-
-
-def cnvlTcOld(idxPrc,
-              aryPrfTcChunk,
-              varTr,
-              varNumVol,
-              queOut):
-    """
-    Old version:
-    Convolution of time courses with one canonical HRF model.
-    """
-    # Create 'canonical' HRF time course model:
-    vecHrf = funcHrf(varNumVol, varTr)
-
-    # adjust the input, if necessary, such that input is 2D, with last dim time
-    tplInpShp = aryPrfTcChunk.shape
-    aryPrfTcChunk = aryPrfTcChunk.reshape((-1, aryPrfTcChunk.shape[-1]))
-
-    # Prepare an empty array for ouput
-    aryConv = np.zeros(np.shape(aryPrfTcChunk))
-
-    # Each time course is convolved with the HRF separately, because the
-    # numpy convolution function can only be used on one-dimensional data.
-    # Thus, we have to loop through time courses:
-    for idxTc, vecTc in enumerate(aryPrfTcChunk):
-
-        # In order to avoid an artefact at the end of the time series, we have
-        # to concatenate an empty array to both the design matrix and the HRF
-        # model before convolution.
-        vecTc = np.append(vecTc, np.zeros(100))
-        vecHrf = np.append(vecHrf, np.zeros(100))
-
-        # Convolve design matrix with HRF model:
-        aryConv[idxTc, :] = np.convolve(vecTc, vecHrf,
-                                        mode='full')[:varNumVol]
-
-    # determine output shape
-    tplOutShp = tplInpShp[:-1] + (1, ) + (tplInpShp[-1], )
 
     # Create list containing the convolved timecourses, and the process ID:
     lstOut = [idxPrc,

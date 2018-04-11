@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """pRF finding function definitions."""
 
-# Part of py_pRF_mapping library
+# Part of py_pRF_motion library
 # Copyright (C) 2016  Ingo Marquardt
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -21,7 +21,6 @@ import os
 import numpy as np
 import scipy as sp
 import nibabel as nb
-from scipy.stats import gamma
 
 
 def load_nii(strPathIn, varSzeThr=5000.0):
@@ -103,9 +102,8 @@ def load_nii(strPathIn, varSzeThr=5000.0):
     return aryNii, objHdr, aryAff
 
 
-def crt_gauss(varSizeX, varSizeY, varPosX, varPosY, varSd):
-    """
-    Create 2D Gaussian kernel.
+def crt_2D_gauss(varSizeX, varSizeY, varPosX, varPosY, varSd):
+    """Create 2D Gaussian kernel.
 
     Parameters
     ----------
@@ -119,11 +117,13 @@ def crt_gauss(varSizeX, varSizeY, varPosX, varPosY, varSd):
         Y position of centre of 2D Gauss.
     varSd : float, positive
         Standard deviation of 2D Gauss.
-
     Returns
     -------
     aryGauss : 2d numpy array, shape [varSizeX, varSizeY]
         2d Gaussian.
+    Reference
+    ---------
+    [1]
     """
     varSizeX = int(varSizeX)
     varSizeY = int(varSizeY)
@@ -134,42 +134,87 @@ def crt_gauss(varSizeX, varSizeY, varPosX, varPosY, varSd):
 
     # The actual creation of the Gaussian array:
     aryGauss = (
-        (np.square((aryX - varPosX))
-         + np.square((aryY - varPosY))
-         ) /
+        (np.square((aryX - varPosX)) + np.square((aryY - varPosY))) /
         (2.0 * np.square(varSd))
         )
-    aryGauss = np.exp(-aryGauss) / (2.0 * np.pi * np.square(varSd))
+    aryGauss = np.exp(-aryGauss) / (2 * np.pi * np.square(varSd))
 
     return aryGauss
 
 
-def crt_hrf(varNumVol, varTr):
-    """Create double gamma function.
+def cnvl_2D_gauss(idxPrc, aryBoxCar, aryMdlParamsChnk, tplPngSize, varNumVol,
+                  queOut):
+    """Spatially convolve boxcar functions with 2D Gaussian.
 
-    Source:
-    http://www.jarrodmillman.com/rcsds/lectures/convolution_background.html
+    Parameters
+    ----------
+    idxPrc : 2d numpy array, shape [n_samples, n_measurements]
+        Description of input 1.
+    aryBoxCar : float, positive
+      Description of input 2.
+    aryMdlParamsChnk : 2d numpy array, shape [n_samples, n_measurements]
+        Description of input 1.
+    tplPngSize : float, positive
+      Description of input 2.
+    varNumVol : 2d numpy array, shape [n_samples, n_measurements]
+        Description of input 1.
+    queOut : float, positive
+      Description of input 2.
+    Returns
+    -------
+    data : 2d numpy array, shape [n_samples, n_measurements]
+        Closed data.
+    Reference
+    ---------
+    [1]
     """
-    vecX = np.arange(0, varNumVol, 1)
+    # Number of combinations of model parameters in the current chunk:
+    varChnkSze = np.size(aryMdlParamsChnk, axis=0)
 
-    # Expected time of peak of HRF [s]:
-    varHrfPeak = 6.0 / varTr
-    # Expected time of undershoot of HRF [s]:
-    varHrfUndr = 12.0 / varTr
-    # Scaling factor undershoot (relative to peak):
-    varSclUndr = 0.35
+    # Determine number of motion directions
+    varNumMtnDrtn = aryBoxCar.shape[2]
 
-    # Gamma pdf for the peak
-    vecHrfPeak = gamma.pdf(vecX, varHrfPeak)
-    # Gamma pdf for the undershoot
-    vecHrfUndr = gamma.pdf(vecX, varHrfUndr)
-    # Combine them
-    vecHrf = vecHrfPeak - varSclUndr * vecHrfUndr
+    # Output array with pRF model time courses:
+    aryOut = np.zeros([varChnkSze, varNumMtnDrtn, varNumVol])
 
-    # Scale maximum of HRF to 1.0:
-    vecHrf = np.divide(vecHrf, np.max(vecHrf))
+    # Loop through different motion directions:
+    for idxMtn in range(0, varNumMtnDrtn):
+        # Loop through combinations of model parameters:
+        for idxMdl in range(0, varChnkSze):
 
-    return vecHrf
+            # Spatial parameters of current model:
+            varTmpX = aryMdlParamsChnk[idxMdl, 1]
+            varTmpY = aryMdlParamsChnk[idxMdl, 2]
+            varTmpSd = aryMdlParamsChnk[idxMdl, 3]
+
+            # Create pRF model (2D):
+            aryGauss = crt_2D_gauss(tplPngSize[0],
+                                    tplPngSize[1],
+                                    varTmpX,
+                                    varTmpY,
+                                    varTmpSd)
+
+            # Multiply pixel-time courses with Gaussian pRF models:
+            aryPrfTcTmp = np.multiply(aryBoxCar[:, :, idxMtn, :],
+                                      aryGauss[:, :, None])
+
+            # Calculate sum across x- and y-dimensions - the 'area under the
+            # Gaussian surface'. This is essentially an unscaled version of the
+            # pRF time course model (i.e. not yet scaled for size of the pRF).
+            aryPrfTcTmp = np.sum(aryPrfTcTmp, axis=(0, 1))
+
+            # Put model time courses into function's output with 2d Gaussian
+            # arrray:
+            aryOut[idxMdl, idxMtn, :] = aryPrfTcTmp
+
+    # Put column with the indicies of model-parameter-combinations into the
+    # output array (in order to be able to put the pRF model time courses into
+    # the correct order after the parallelised function):
+    lstOut = [idxPrc,
+              aryOut]
+
+    # Put output to queue:
+    queOut.put(lstOut)
 
 
 class cls_set_config(object):
