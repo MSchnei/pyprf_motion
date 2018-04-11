@@ -29,12 +29,16 @@ import nibabel as nb
 import multiprocessing as mp
 
 from pyprf.analysis.load_config import load_config
-from pyprf.analysis.utilities import cls_set_config
-
+from pyprf.analysis.utils_general import cls_set_config
 from pyprf.analysis.model_creation_main import model_creation
-from pyprf.analysis.preprocessing_main import pre_pro_models
-from pyprf.analysis.preprocessing_main import pre_pro_func
 
+from preprocessing_main import pre_pro_models
+from preprocessing_main import pre_pro_func
+
+###### DEBUGGING ###############
+strCsvCnfg = "/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/config_default.csv"
+lgcTest = False
+################################
 
 def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     """
