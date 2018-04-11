@@ -21,7 +21,7 @@ import numpy as np
 import multiprocessing as mp
 from PIL import Image
 from pyprf_motion.analysis.utils_hrf import spmt, dspmt, ddspmt, cnvl_tc
-from pyprf_motion.analysis.general import cnvl_2D_gauss
+from pyprf_motion.analysis.utils_general import cnvl_2D_gauss
 
 
 def load_png(varNumVol, strPathPng, tplVslSpcSze=(200, 200), varStrtIdx=0,
@@ -111,6 +111,25 @@ def load_png(varNumVol, strPathPng, tplVslSpcSze=(200, 200), varStrtIdx=0,
 
     return aryPngData
 
+
+def load_ev_txt(strPthEv):
+    """Load information from event text file.
+
+    Parameters
+    ----------
+    input1 : str
+        Path to event text file
+    Returns
+    -------
+    aryEvTxt : 2d numpy array, shape [n_measurements, 3]
+        Array with info about conditions: type, onset, duration
+    Notes
+    -----
+    Part of py_pRF_mapping library.
+    """
+    aryEvTxt = np.loadtxt(strPthEv, dtype='float', comments='#', delimiter=' ',
+                          skiprows=0, usecols=(0, 1, 2))
+    return aryEvTxt
 
 def crt_pw_bxcr_fn(aryPngData, varNumVol, vecMtDrctn=False, aryPresOrd=False):
     """Create pixel-wise boxcar functions.
