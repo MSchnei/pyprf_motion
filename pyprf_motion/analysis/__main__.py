@@ -12,8 +12,8 @@ Use config.py to set analysis parameters.
 
 import os
 import argparse
-from pyprf.analysis.pyprf_main import pyprf
-from pyprf import __version__
+from pyprf_motion.analysis.pyprf_main import pyprf
+from pyprf_motion import __version__
 
 
 # Get path of this file:
@@ -26,7 +26,7 @@ def main():
     # function that is called):  --NOTE: This is another way of accessing
     # input arguments, but since we use 'argparse' it is redundant.
     # lstArgs = sys.argv[1:]
-    strWelcome = 'PyPRF ' + __version__
+    strWelcome = 'pyprf_motion ' + __version__
     strDec = '=' * len(strWelcome)
     print(strDec + '\n' + strWelcome + '\n' + strDec)
 
@@ -72,7 +72,7 @@ def main():
     # Print info if no config argument is provided.
     if strCsvCnfg is None:
         print('Please provide the file path to a config file, e.g.:')
-        print('   pyprf -config /path/to/my_config_file.csv')
+        print('   pyprf_motion -config /path/to/my_config_file.csv')
 
     else:
 

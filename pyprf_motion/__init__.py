@@ -13,6 +13,6 @@ try:
         raise DistributionNotFound
 except DistributionNotFound:
     __version__ = 'Version information not found. Please install this project \
-                   through pip.)'
+                   with setup.py)'
 else:
     __version__ = _dist.version

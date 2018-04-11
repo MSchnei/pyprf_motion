@@ -2,7 +2,7 @@
 """pRF model creation."""
 
 # Part of py_pRF_mapping library
-# Copyright (C) 2016  Ingo Marquardt
+# Copyright (C) 2016  Marian Schneider, Ingo Marquardt
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -19,10 +19,11 @@
 
 import numpy as np
 import nibabel as nb
-from pyprf.analysis.utils_general import cls_set_config
-from pyprf.analysis.model_creation_utils import load_png
-from pyprf.analysis.model_creation_utils import (crt_pw_bxcr_fn, crt_nrl_tc,
-                                                 crt_prf_tc)
+from pyprf_motion.analysis.utils_general import cls_set_config
+from pyprf_motion.analysis.model_creation_utils import load_png
+from pyprf_motion.analysis.model_creation_utils import (crt_pw_bxcr_fn,
+                                                        crt_nrl_tc,
+                                                        crt_prf_tc)
 
 
 def model_creation(dicCnfg):

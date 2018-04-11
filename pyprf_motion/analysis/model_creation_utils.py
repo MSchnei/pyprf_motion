@@ -2,7 +2,7 @@
 """Utilities for pRF model creation."""
 
 # Part of py_pRF_mapping library
-# Copyright (C) 2016  Ingo Marquardt
+# Copyright (C) 2016  Marian Schneider, Ingo Marquardt
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -20,8 +20,8 @@
 import numpy as np
 import multiprocessing as mp
 from PIL import Image
-from pyprf.analysis.utils_hrf import spmt, dspmt, ddspmt, cnvl_tc
-from pyprf.analysis.general import cnvl_2D_gauss
+from pyprf_motion.analysis.utils_hrf import spmt, dspmt, ddspmt, cnvl_tc
+from pyprf_motion.analysis.general import cnvl_2D_gauss
 
 
 def load_png(varNumVol, strPathPng, tplVslSpcSze=(200, 200), varStrtIdx=0,

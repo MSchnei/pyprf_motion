@@ -7,7 +7,7 @@ Use `import pRF_config_motion as cfg` for pRF analysis with motion stimuli.
 """
 
 
-# Part of py_pRF_mapping library
+# Part of pyprf_motion library
 # Copyright (C) 2016  Ingo Marquardt
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -28,9 +28,9 @@ import numpy as np
 import nibabel as nb
 import multiprocessing as mp
 
-from pyprf.analysis.load_config import load_config
-from pyprf.analysis.utils_general import cls_set_config
-from pyprf.analysis.model_creation_main import model_creation
+from pyprf_motion.analysis.load_config import load_config
+from pyprf_motion.analysis.utils_general import cls_set_config
+from pyprf_motion.analysis.model_creation_main import model_creation
 
 from preprocessing_main import pre_pro_models
 from preprocessing_main import pre_pro_func
@@ -69,9 +69,9 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
 
     # Conditional imports:
     if cfg.strVersion == 'gpu':
-        from pyprf.analysis.find_prf_gpu import find_prf_gpu
+        from pyprf_motion.analysis.find_prf_gpu import find_prf_gpu
     if ((cfg.strVersion == 'cython') or (cfg.strVersion == 'numpy')):
-        from pyprf.analysis.find_prf_cpu import find_prf_cpu
+        from pyprf_motion.analysis.find_prf_cpu import find_prf_cpu
 
     # Convert preprocessing parameters (for temporal and spatial smoothing)
     # from SI units (i.e. [s] and [mm]) into units of data array (volumes and
