@@ -143,7 +143,7 @@ def crt_2D_gauss(varSizeX, varSizeY, varPosX, varPosY, varSd):
 
 
 def cnvl_2D_gauss(idxPrc, aryBoxCar, aryMdlParamsChnk, tplPngSize, varNumVol,
-                  queOut):
+                  varTmpOvsmpl, queOut):
     """Spatially convolve boxcar functions with 2D Gaussian.
 
     Parameters
@@ -171,41 +171,36 @@ def cnvl_2D_gauss(idxPrc, aryBoxCar, aryMdlParamsChnk, tplPngSize, varNumVol,
     # Number of combinations of model parameters in the current chunk:
     varChnkSze = np.size(aryMdlParamsChnk, axis=0)
 
-    # Determine number of motion directions
-    varNumMtnDrtn = aryBoxCar.shape[2]
-
     # Output array with pRF model time courses:
-    aryOut = np.zeros([varChnkSze, varNumMtnDrtn, varNumVol])
+    aryOut = np.zeros([varChnkSze, int(varNumVol*varTmpOvsmpl)])
 
-    # Loop through different motion directions:
-    for idxMtn in range(0, varNumMtnDrtn):
-        # Loop through combinations of model parameters:
-        for idxMdl in range(0, varChnkSze):
+    # Loop through combinations of model parameters:
+    for idxMdl in range(0, varChnkSze):
 
-            # Spatial parameters of current model:
-            varTmpX = aryMdlParamsChnk[idxMdl, 1]
-            varTmpY = aryMdlParamsChnk[idxMdl, 2]
-            varTmpSd = aryMdlParamsChnk[idxMdl, 3]
+        # Spatial parameters of current model:
+        varTmpX = aryMdlParamsChnk[idxMdl, 1]
+        varTmpY = aryMdlParamsChnk[idxMdl, 2]
+        varTmpSd = aryMdlParamsChnk[idxMdl, 3]
 
-            # Create pRF model (2D):
-            aryGauss = crt_2D_gauss(tplPngSize[0],
-                                    tplPngSize[1],
-                                    varTmpX,
-                                    varTmpY,
-                                    varTmpSd)
+        # Create pRF model (2D):
+        aryGauss = crt_2D_gauss(tplPngSize[0],
+                                tplPngSize[1],
+                                varTmpX,
+                                varTmpY,
+                                varTmpSd)
 
-            # Multiply pixel-time courses with Gaussian pRF models:
-            aryPrfTcTmp = np.multiply(aryBoxCar[:, :, idxMtn, :],
-                                      aryGauss[:, :, None])
+        # Multiply pixel-time courses with Gaussian pRF models:
+        aryPrfTcTmp = np.multiply(aryBoxCar,
+                                  aryGauss[:, :, None])
 
-            # Calculate sum across x- and y-dimensions - the 'area under the
-            # Gaussian surface'. This is essentially an unscaled version of the
-            # pRF time course model (i.e. not yet scaled for size of the pRF).
-            aryPrfTcTmp = np.sum(aryPrfTcTmp, axis=(0, 1))
+        # Calculate sum across x- and y-dimensions - the 'area under the
+        # Gaussian surface'. This is essentially an unscaled version of the
+        # pRF time course model (i.e. not yet scaled for size of the pRF).
+        aryPrfTcTmp = np.sum(aryPrfTcTmp, axis=(0, 1))
 
-            # Put model time courses into function's output with 2d Gaussian
-            # arrray:
-            aryOut[idxMdl, idxMtn, :] = aryPrfTcTmp
+        # Put model time courses into function's output with 2d Gaussian
+        # arrray:
+        aryOut[idxMdl, :] = aryPrfTcTmp
 
     # Put column with the indicies of model-parameter-combinations into the
     # output array (in order to be able to put the pRF model time courses into

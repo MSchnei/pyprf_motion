@@ -171,8 +171,8 @@ def create_boxcar(conditions, onsets, durations, TR, n_scans,
     return boxcar_out
 
 
-def createHrf(boxcar, TR, basis='hrf', oversample=10, hrf_length=32,
-              **hrf_params):
+def create_hrf(boxcar, TR, basis='hrf', oversample=10, hrf_length=32,
+               **hrf_params):
 
     if basis == '3hrf':
         basis = [spmt, dspmt, ddspmt]

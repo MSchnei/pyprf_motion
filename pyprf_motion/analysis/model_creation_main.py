@@ -20,11 +20,10 @@
 import numpy as np
 import nibabel as nb
 from pyprf_motion.analysis.utils_general import cls_set_config
-from pyprf_motion.analysis.model_creation_utils import load_png
 from pyprf_motion.analysis.model_creation_utils import (crt_pw_bxcr_fn,
                                                         crt_nrl_tc,
                                                         crt_prf_tc)
-
+from pyprf_motion.analysis.utils_hrf import create_hrf
 
 def model_creation(dicCnfg):
     """
@@ -51,25 +50,31 @@ def model_creation(dicCnfg):
     if cfg.lgcCrteMdl:  #noqa
 
         # *********************************************************************
-        # *** Load spatial stimulus information from PNG files:
+        # *** Load spatial condition information
+        print('------Load spatial condition information')
+        arySptExpInf = np.load(cfg.strSptExpInf)
+        # *********************************************************************
 
-        print('------Load spatial stimulus information from PNG files')
-
-        aryPngData = load_png(cfg.varNumVol,
-                              cfg.strPathPng,
-                              cfg.tplVslSpcSze,
-                              varStrtIdx=cfg.varStrtIdx,
-                              varZfill=cfg.varZfill)
+        # *********************************************************************
+        # *** Load temporal condition information
+        print('------Load temporal condition information')
+        aryTmpExpInf = np.load(cfg.strTmpExpInf)
         # *********************************************************************
 
         # *********************************************************************
         # *** Create pixel-wise boxcar functions
-
         print('------Create pixel-wise boxcar functions')
 
-        aryBoxCar = crt_pw_bxcr_fn(aryPngData, cfg.varNumVol)
-#        del(aryPngData)
+        cfg.varTmpOvsmpl = 100.
 
+        aryBoxCar = crt_pw_bxcr_fn(aryTmpExpInf, arySptExpInf, cfg.varTr,
+                                   cfg.varNumVol, cfg.varTmpOvsmpl,
+                                   cfg.varVslSpcSzeX, cfg.varVslSpcSzeY)
+#        del(aryTmpExpInf)
+#        del(arySptExpInf)
+
+#        hrfTest = create_hrf(condTest, cfg.varTr, basis='hrf',
+#                             oversample=cfg.varTmpOvsmpl/2., hrf_length=32)[0]
         # *********************************************************************
 
         # *********************************************************************
@@ -77,44 +82,51 @@ def model_creation(dicCnfg):
 
         print('------Create neural time course models')
 
-        aryNrlTc = crt_nrl_tc(aryBoxCar, cfg.varNumMtDrctn, cfg.varNumVol,
-                              cfg.tplPngSize, cfg.varNumX, cfg.varExtXmin,
-                              cfg.varExtXmax, cfg.varNumY, cfg.varExtYmin,
-                              cfg.varExtYmax, cfg.varNumPrfSizes,
-                              cfg.varPrfStdMin, cfg.varPrfStdMax,
-                              cfg.varPar)
+        aryNrlTc = crt_nrl_tc(aryBoxCar, cfg.varNumVol,
+                              (int(cfg.varVslSpcSzeX), int(cfg.varVslSpcSzeY)),
+                              cfg.varNumX, cfg.varExtXmin, cfg.varExtXmax,
+                              cfg.varNumY, cfg.varExtYmin, cfg.varExtYmax,
+                              cfg.varNumPrfSizes, cfg.varPrfStdMin,
+                              cfg.varPrfStdMax, cfg.varTmpOvsmpl, cfg.varPar)
 #        del(aryBoxCar)
-        # *********************************************************************
+        print('------Save')
+        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/modelTest',
+                aryNrlTc)
+        print('------Done')
 
         # *********************************************************************
-        # *** convolve every neural time course model with hrf function(s)
 
-        print('------Create pRF time course models by convolution')
 
-        aryPrfTc = crt_prf_tc(aryNrlTc, cfg.varNumVol, cfg.varTr,
-                              cfg.tplPngSize, cfg.varNumMtDrctn,
-                              cfg.switchHrfSet, cfg.varPar)
-#        del(aryNrlTc)
-        # *********************************************************************
 
-        # *********************************************************************
-        # Debugging feature:
-        # np.save('/home/john/Desktop/aryPixConv.npy', aryPixConv)
-        # *********************************************************************
-
-        # *********************************************************************
-        # *** Save pRF time course models
-
-        print('------Save pRF time course models to disk')
-
-        # Save the 4D array as '*.npy' file:
-        np.save(cfg.strPathMdl,
-                aryPrfTc)
-
-        # Save 4D array as '*.nii' file (for debugging purposes):
-        niiPrfTc = nb.Nifti1Image(aryPrfTc, np.eye(4))
-        nb.save(niiPrfTc, cfg.strPathMdl)
-        # *********************************************************************
+#        # *********************************************************************
+#        # *** convolve every neural time course model with hrf function(s)
+#
+#        print('------Create pRF time course models by convolution')
+#
+#        aryPrfTc = crt_prf_tc(aryNrlTc, cfg.varNumVol, cfg.varTr,
+#                              cfg.tplPngSize, cfg.varNumMtDrctn,
+#                              cfg.switchHrfSet, cfg.varPar)
+##        del(aryNrlTc)
+#        # *********************************************************************
+#
+#        # *********************************************************************
+#        # Debugging feature:
+#        # np.save('/home/john/Desktop/aryPixConv.npy', aryPixConv)
+#        # *********************************************************************
+#
+#        # *********************************************************************
+#        # *** Save pRF time course models
+#
+#        print('------Save pRF time course models to disk')
+#
+#        # Save the 4D array as '*.npy' file:
+#        np.save(cfg.strPathMdl,
+#                aryPrfTc)
+#
+#        # Save 4D array as '*.nii' file (for debugging purposes):
+#        niiPrfTc = nb.Nifti1Image(aryPrfTc, np.eye(4))
+#        nb.save(niiPrfTc, cfg.strPathMdl)
+#        # *********************************************************************
 
     else:
 

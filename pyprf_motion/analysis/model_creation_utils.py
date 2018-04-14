@@ -19,9 +19,10 @@
 
 import numpy as np
 import multiprocessing as mp
-from PIL import Image
+#from PIL import Image
 from pyprf_motion.analysis.utils_hrf import spmt, dspmt, ddspmt, cnvl_tc
 from pyprf_motion.analysis.utils_general import cnvl_2D_gauss
+from pyprf_motion.analysis.utils_hrf import create_boxcar
 
 
 def load_png(varNumVol, strPathPng, tplVslSpcSze=(200, 200), varStrtIdx=0,
@@ -131,7 +132,9 @@ def load_ev_txt(strPthEv):
                           skiprows=0, usecols=(0, 1, 2))
     return aryEvTxt
 
-def crt_pw_bxcr_fn(aryPngData, varNumVol, vecMtDrctn=False, aryPresOrd=False):
+
+def crt_pw_bxcr_fn(aryTmpExpInf, arySptExpInf, varTr, varNumVol, varTmpOvsmpl,
+                   varVslSpcSzeX, varVslSpcSzeY):
     """Create pixel-wise boxcar functions.
 
     Parameters
@@ -148,30 +151,33 @@ def crt_pw_bxcr_fn(aryPngData, varNumVol, vecMtDrctn=False, aryPresOrd=False):
     ---------
     [1]
     """
-    print('------Create pixel-wise boxcar functions')
-    aryBoxCar = np.empty(aryPngData.shape[0:2] + (len(vecMtDrctn),) +
-                         (varNumVol,), dtype='int64')
-    for ind, num in enumerate(vecMtDrctn):
-        aryCondTemp = np.zeros((aryPngData.shape), dtype='int64')
-        lgcTempMtDrctn = [aryPresOrd == num][0]
-        aryCondTemp[:, :, lgcTempMtDrctn] = np.copy(
-            aryPngData[:, :, lgcTempMtDrctn])
-        aryBoxCar[:, :, ind, :] = aryCondTemp
+    # create boxcar functions in temporally upsampled space
+    aryBxCarTmp = create_boxcar(aryTmpExpInf[:, 0], aryTmpExpInf[:, 1],
+                                aryTmpExpInf[:, 2], varTr, varNumVol,
+                                oversample=varTmpOvsmpl)
+    # pre-allocate pixelwise boxcar array
+    aryBoxCar = np.zeros((int(varVslSpcSzeX), int(varVslSpcSzeY),
+                          int(varNumVol*varTmpOvsmpl))).astype('int8')
+
+    for ind, vecTmpBxCr in enumerate(aryBxCarTmp.T):
+        # get image
+        ima = arySptExpInf[..., ind].astype('int8')
+        # insert image several times using broad-casting
+        aryBoxCar[..., vecTmpBxCr.astype('bool')] = ima[:, :, None]
 
     return aryBoxCar
 
 
-def crt_nrl_tc(aryBoxCar, varNumMtDrctn, varNumVol, tplPngSize, varNumX,
+def crt_nrl_tc(aryBoxCar, varNumVol, tplPngSize, varNumX,
                varExtXmin,  varExtXmax, varNumY, varExtYmin, varExtYmax,
-               varNumPrfSizes, varPrfStdMin, varPrfStdMax, varPar):
+               varNumPrfSizes, varPrfStdMin, varPrfStdMax, varTmpOvsmpl,
+               varPar):
     """Create neural model time courses from pixel-wise boxcar functions.
 
     Parameters
     ----------
-    aryBoxCar : 4d numpy array, shape [n_x_pix, n_y_pix, n_mtn_dir, n_vol]
+    aryBoxCar : 3d numpy array, shape [n_x_pix, n_y_pix, n_vol]
         Description of input 1.
-    varNumMtDrctn : float, positive
-        Description of input 2.
     varNumVol : float, positive
         Description of input 2.
     tplPngSize : tuple
@@ -290,7 +296,7 @@ def crt_nrl_tc(aryBoxCar, varNumMtDrctn, varNumVol, tplPngSize, varNumX,
         lstPrcs[idxPrc] = mp.Process(target=cnvl_2D_gauss,
                                      args=(idxPrc, aryBoxCar,
                                            lstMdlParams[idxPrc], tplPngSize,
-                                           varNumVol, queOut)
+                                           varNumVol, varTmpOvsmpl, queOut)
                                      )
         # Daemon (kills processes when exiting):
         lstPrcs[idxPrc].Daemon = True
@@ -310,7 +316,7 @@ def crt_nrl_tc(aryBoxCar, varNumMtDrctn, varNumVol, tplPngSize, varNumX,
     print('---------Collecting results from parallel processes')
     # Put output arrays from parallel process into one big array
     lstPrfTc = sorted(lstPrfTc)
-    aryPrfTc = np.empty((0, varNumMtDrctn, varNumVol))
+    aryPrfTc = np.empty((0, int(varNumVol*varTmpOvsmpl)))
     for idx in range(0, varPar):
         aryPrfTc = np.concatenate((aryPrfTc, lstPrfTc[idx][1]), axis=0)
 
@@ -325,8 +331,8 @@ def crt_nrl_tc(aryBoxCar, varNumMtDrctn, varNumVol, tplPngSize, varNumX,
     # Array representing the low-resolution visual space, of the form
     # aryPrfTc[x-position, y-position, pRF-size, varNum Vol], which will hold
     # the pRF model time courses.
-    aryNrlTc = np.zeros([varNumX, varNumY, varNumPrfSizes, varNumMtDrctn,
-                         varNumVol])
+    aryNrlTc = np.zeros([varNumX, varNumY, varNumPrfSizes,
+                         int(varNumVol*varTmpOvsmpl)])
 
     # We use the same loop structure for organising the pRF model time courses
     # that we used for creating the parameter array. Counter:
@@ -347,8 +353,8 @@ def crt_nrl_tc(aryBoxCar, varNumMtDrctn, varNumVol, tplPngSize, varNumX,
                 # Put the pRF model time course into its correct position in
                 # the 4D array, leaving out the first column (which contains
                 # the index):
-                aryNrlTc[idxX, idxY, idxSd, :, :] = aryPrfTc[
-                    varCntMdlPrms, :, :]
+                aryNrlTc[idxX, idxY, idxSd, :] = aryPrfTc[
+                    varCntMdlPrms, :]
 
                 # Increment parameter index:
                 varCntMdlPrms = varCntMdlPrms + 1
