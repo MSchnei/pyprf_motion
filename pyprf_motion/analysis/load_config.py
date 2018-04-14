@@ -218,13 +218,17 @@ def load_config(strCsvCnfg, lgcTest=False):  #noqa
     # be provided:
     if dicCnfg['lgcCrteMdl']:
 
-        # Basename of the 'binary stimulus files'. The files need to be in png
-        # format and number in the order of their presentation during the
-        # experiment.
-        dicCnfg['strPathPng'] = ast.literal_eval(dicCnfg['strPathPng'])
+        # Name of the npy that holds spatial info about conditions
+        dicCnfg['strSptExpInf'] = ast.literal_eval(dicCnfg['strSptExpInf'])
         if lgcPrint:
-            print('---Basename of PNG stimulus files: '
-                  + str(dicCnfg['strPathPng']))
+            print('---Path to npy file with spatial condition info: '
+                  + str(dicCnfg['strSptExpInf']))
+
+        # Name of the npy that holds temporal info about conditions
+        dicCnfg['strTmpExpInf'] = ast.literal_eval(dicCnfg['strTmpExpInf'])
+        if lgcPrint:
+            print('---Path to npy file with temporal condition info: '
+                  + str(dicCnfg['strTmpExpInf']))
 
         # Start index of PNG files. For instance, `varStrtIdx = 0` if the name
         # of the first PNG file is `file_000.png`, or `varStrtIdx = 1` if it is

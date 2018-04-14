@@ -97,10 +97,11 @@ lgcCrteMdl = True
 # If we create new pRF time course models, the following parameters have to
 # be provided:
 
-# Basename of the 'binary stimulus files'. The files need to be in png
-# format and number in the order of their presentation during the
-# experiment.
-strPathPng = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/sptInfo/frame'  #noqa
+# Name of the npy that holds spatial info about conditions
+strSptExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/sptInfo/arySptExpInf.npy'  #noqa
+
+# Name of the npy that holds temporal info about conditions
+strTmpExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/tmpInfo/aryTmpExpInf.npy'
 
 # Start index of PNG files. For instance, `varStrtIdx = 0` if the name of
 # the first PNG file is `file_000.png`, or `varStrtIdx = 1` if it is
@@ -114,4 +115,4 @@ varZfill = 4
 
 # Path to npy file with pRF time course models (to save or laod). Without file
 # extension.
-strPathMdl = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/02_MotLoc/pRF_results/pRF_model_tc'  #noqa
+strPathMdl = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/pRF_results/pRF_model_tc'  #noqa
