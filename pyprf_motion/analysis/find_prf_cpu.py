@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-from pyprf_motion.analysis.utilities import cls_set_config
+from pyprf_motion.analysis.utils_general import cls_set_config
 from pyprf_motion.analysis.cython_leastsquares import cy_lst_sq
 
 
