@@ -50,7 +50,7 @@ lstCond = []
 for cond in lstMotLoc:
     inputFile = os.path.join(strPthCond, cond)
     # extract condition
-    aryTmpCnd = np.load(inputFile)["conditions"].astype('int8')
+    aryTmpCnd = np.load(inputFile)["conditions"].astype('int32')
     # append condition to list
     lstCond.append(aryTmpCnd)
 
@@ -60,6 +60,19 @@ arySptCond = np.vstack(lstCond)
 # arySptCond is a varNrCond x 2 array. The first column contains the index for
 # spatial aperture, the second contains the index for the type of the aperture
 # (vertical bar, horizontal bar, wedge)
+
+# %% get remapped array of spatial conditions
+# arySptCond is remapped into into space of continuous, unique cond numbers
+aryRmpSptCond = np.empty((len(arySptCond),))
+# get the condition nr
+aryRmpSptCond = arySptCond[:, 0] + arySptCond[:, 1] * np.max(arySptCond[:, 0])
+# get remapping to continuous numbers
+aryFrm = np.unique(aryRmpSptCond)
+aryTo = np.argsort(np.unique(aryRmpSptCond))
+# apply mapping
+aryRmpSptCond = np.array(
+    [aryTo[aryFrm == i][0] for i in aryRmpSptCond])
+
 
 # %% load mask file
 
@@ -73,7 +86,11 @@ with np.load((strPthMsk)) as objMsks:
     mskVertiBar = objMsks["vertiBarMasksFitting"]
     mskWedge = objMsks["wedgeMasksFitting"]
 
-# %% generate pngs
+# %% generate pngs and array with continuous, unique condition numbers
+
+# this array will contain all spatial condition as images. It will be a 3D
+# array whose third dimension can be used to index unique sptial connditions
+aryUnqSptCond = np.empty((mskWedge.shape[:2] + (len(aryTo),)))
 
 # load np arrays from dictionary and save their 2D slices as png
 for index in np.arange(arySptCond.shape[0]):
@@ -91,21 +108,30 @@ for index in np.arange(arySptCond.shape[0]):
     elif keyCond == 3:
         ima = mskWedge[..., keyMask-1]
 
+    # assign image to aryUnqSptCond
+    aryUnqSptCond[..., aryRmpSptCond[index]] = ima
+
     # if desired, downsample
     if factorX > 1 or factorY > 1:
         ima = ima[::factorX, ::factorY]
 
     im = Image.fromarray(scaleValue * ima.astype(np.uint8))
     if index > 999:
-        filename = ("frame" + '' + str(index) + '.png')
+        strFlNm = ("frame" + '' + str(index) + '.png')
     elif index > 99:
-        filename = ("frame" + '0' + str(index) + '.png')
+        strFlNm = ("frame" + '0' + str(index) + '.png')
     elif index > 9:
-        filename = ("frame" + '00' + str(index) + '.png')
+        strFlNm = ("frame" + '00' + str(index) + '.png')
     else:
-        filename = ("frame" + '000' + str(index) + '.png')
+        strFlNm = ("frame" + '000' + str(index) + '.png')
 
     im.save((os.path.join(strPthPrnt, '03_MotLoc', 'expInfo', 'sptInfo',
-                          filename)))
+                          strFlNm)))
     print("Save ima: " + os.path.join(strPthPrnt, '03_MotLoc', 'expInfo',
-                                      'sptInfo', filename))
+                                      'sptInfo', strFlNm))
+
+# downsample
+aryUnqSptCond = aryUnqSptCond[::factorX, ::factorY, :]
+strAryPth = os.path.join(strPthPrnt, '03_MotLoc', 'expInfo',
+                         'sptInfo', 'aryUnqSptCond')
+np.save(strAryPth, aryUnqSptCond)

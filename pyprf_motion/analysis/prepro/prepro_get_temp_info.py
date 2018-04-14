@@ -49,11 +49,17 @@ lstCond = []
 for ind, cond in enumerate(lstMotLoc):
     inputFile = os.path.join(strPthCond, cond)
     # extract condition
-    aryTmp = np.load(inputFile)["conditions"].astype('int8')
+    aryTmp = np.load(inputFile)["conditions"].astype('int32')
     # create empty array
     aryTmpCond = np.empty((len(aryTmp), 3), dtype='float16')
     # get the condition nr
     aryTmpCond[:, 0] = aryTmp[:, 0] + aryTmp[:, 1] * np.max(aryTmp[:, 0])
+    # get remapping to continuous numbers
+    aryFrm = np.unique(aryTmpCond[:, 0])
+    aryTo = np.argsort(np.unique(aryTmpCond[:, 0]))
+    # apply mapping
+    aryTmpCond[:, 0] = np.array(
+        [aryTo[aryFrm == i][0] for i in aryTmpCond[:, 0]])
     # get the onset time
     aryTmpCond[:, 1] = np.cumsum(np.ones(len(aryTmp))*varTr) - varTr
     # get the duration
@@ -74,6 +80,13 @@ aryCond = np.vstack(lstCond)
 aryTmpCondAll = np.empty((len(aryCond), 3), dtype='float16')
 # get the condition nr
 aryTmpCondAll[:, 0] = aryCond[:, 0] + aryCond[:, 1] * np.max(aryCond[:, 0])
+# get remapping to continuous numbers
+aryFrm = np.unique(aryTmpCondAll[:, 0])
+aryTo = np.argsort(np.unique(aryTmpCondAll[:, 0]))
+# apply mapping
+aryTmpCondAll[:, 0] = np.array(
+    [aryTo[aryFrm == i][0] for i in aryTmpCondAll[:, 0]])
+
 # get the onset time
 aryTmpCondAll[:, 1] = np.cumsum(np.ones(len(aryCond))*varTr) - varTr
 # get the duration
