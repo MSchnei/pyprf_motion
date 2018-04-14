@@ -133,5 +133,5 @@ for index in np.arange(arySptCond.shape[0]):
 # downsample
 aryUnqSptCond = aryUnqSptCond[::factorX, ::factorY, :]
 strAryPth = os.path.join(strPthPrnt, '03_MotLoc', 'expInfo',
-                         'sptInfo', 'aryUnqSptCond')
+                         'sptInfo', 'arySptExpInf')
 np.save(strAryPth, aryUnqSptCond)

@@ -101,3 +101,7 @@ aryTmpCondAll[:, 2] = np.ones(len(aryCond))*varStmTm
 strPthTxtFle = os.path.join(strPthPrnt, '03_MotLoc', 'expInfo', 'tmpInfo',
                             'run_all_txt_eventmatrix.txt')
 np.savetxt(strPthTxtFle, aryTmpCondAll, delimiter=" ", fmt="%1.2f")
+
+strPthAry = os.path.join(strPthPrnt, '03_MotLoc', 'expInfo', 'tmpInfo',
+                         'aryTmpExpInf')
+np.save(strPthAry, aryTmpCondAll)
