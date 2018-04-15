@@ -362,23 +362,23 @@ def crt_nrl_tc(aryBoxCar, varNumVol, tplPngSize, varNumX,
     return aryNrlTc
 
 
-def crt_prf_tc(aryNrlTc, varNumVol, varTr, tplPngSize, varNumMtDrctn,
-               switchHrfSet, varPar,):
+def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
+               tplPngSize, varPar):
     """Convolve every neural time course with HRF function.
 
     Parameters
     ----------
-    aryNrlTc : 5d numpy array, shape [n_x_pos, n_y_pos, n_sd, n_mtn_dir, n_vol]
-        Description of input 1.
+    aryNrlTc : 4d numpy array, shape [n_x_pos, n_y_pos, n_sd, n_vol]
+        Temporally upsampled neural time course models.
     varNumVol : float, positive
-        Description of input 2.
+        Number of volumes of the (fMRI) data.
     varTr : float, positive
+        Time to repeat (TR) of the (fMRI) experiment.
+    varTmpOvsmpl : int, positive
+        Factor by which the data hs been temporally upsampled.
+    switchHrfSet :
         Description of input 1.
     tplPngSize : tuple
-        Description of input 1.
-    varNumMtDrctn : int, positive
-        Description of input 1.
-    switchHrfSet :
         Description of input 1.
     varPar : int, positive
         Description of input 1.
@@ -425,6 +425,7 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, tplPngSize, varNumMtDrctn,
                                            lstHrf,
                                            varTr,
                                            varNumVol,
+                                           varTmpOvsmpl,
                                            queOut)
                                      )
 
@@ -456,8 +457,7 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, tplPngSize, varNumMtDrctn,
     del(lstConv)
 
     # Reshape results:
-    tplOutShp = tplInpShp[:-2] + (varNumMtDrctn * len(lstHrf), ) + \
-        (tplInpShp[-1], )
+    tplOutShp = tplInpShp[:-2] + (len(lstHrf), ) + (varNumVol, )
 
     # Return:
     return np.reshape(aryNrlTcConv, tplOutShp)
