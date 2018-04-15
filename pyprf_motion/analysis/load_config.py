@@ -218,8 +218,8 @@ def load_config(strCsvCnfg, lgcTest=False):  #noqa
     # 1: canonical, 2: can and temp derivative, 3: can, temp and spat deriv
     dicCnfg['switchHrfSet'] = ast.literal_eval(dicCnfg['switchHrfSet'])
     if lgcPrint:
-        print('---Switch to determine which hrf functions should be used ')
-        print('   ' + str(dicCnfg['switchHrfSet']))
+        print('---Switch to determine which hrf functions should be used: '
+              + str(dicCnfg['switchHrfSet']))
 
     # If we create new pRF time course models, the following parameters have to
     # be provided:
