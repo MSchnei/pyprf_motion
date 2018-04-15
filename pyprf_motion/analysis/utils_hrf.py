@@ -138,28 +138,30 @@ def ddspmt(t):
     return (spmt(t) - _spm_dd_func(t)) / 0.01
 
 
-# %% convenience functions from temp_encode
-def create_boxcar(conditions, onsets, durations, TR, n_scans,
-                  excl_cond=None, oversample=1000.):
+def create_boxcar(conditions, onsets, durations, varTr, varNumVol,
+                  excl_cond=None, varTmpOvsmpl=1000.):
+    """
+    Creation of condition time courses in temporally upsampled space.
+    """
     if excl_cond is not None:
         for cond in excl_cond:
             onsets = onsets[conditions != cond]
             durations = durations[conditions != cond]
             conditions = conditions[conditions != cond]
 
-    resolution = TR / float(oversample)
+    resolution = varTr / float(varTmpOvsmpl)
     conditions = np.asarray(conditions)
     onsets = np.asarray(onsets, dtype=np.float)
     unique_conditions = np.sort(np.unique(conditions))
     boxcar = []
 
     for c in unique_conditions:
-        tmp = np.zeros(int(n_scans * TR/resolution))
+        tmp = np.zeros(int(varNumVol * varTr/resolution))
         onset_c = onsets[conditions == c]
         duration_c = durations[conditions == c]
         onset_idx = np.round(onset_c / resolution).astype(np.int)
         duration_idx = np.round(duration_c / resolution).astype(np.int)
-        aux = np.arange(int(n_scans * TR/resolution))
+        aux = np.arange(int(varNumVol * varTr/resolution))
         for start, dur in zip(onset_idx, duration_idx):
             lgc = np.logical_and(aux >= start, aux < start + dur)
             tmp = tmp + lgc
@@ -171,39 +173,8 @@ def create_boxcar(conditions, onsets, durations, TR, n_scans,
     return boxcar_out
 
 
-def create_hrf(boxcar, TR, basis='hrf', oversample=10, hrf_length=32,
-               **hrf_params):
-
-    if basis == '3hrf':
-        basis = [spmt, dspmt, ddspmt]
-    elif basis == '2hrf':
-        basis = [spmt, dspmt]
-    elif basis == 'hrf':
-        basis = [spmt]
-
-    B = []
-    norm_factors = []
-    for b in basis:
-        # needs to be a multiple of oversample
-        tmp_basis = b(np.linspace(0, hrf_length, hrf_length*oversample),
-                      **hrf_params)
-        norm_factor = np.sum(tmp_basis)
-        norm_factors.append(np.max(tmp_basis)/norm_factor)
-        tmp_basis = tmp_basis/norm_factor
-        B.append(tmp_basis)
-    return np.array(B).T, norm_factors
-
-
-# %% functions for convolution from pyprf_feature
-def cnvl_tc(idxPrc,
-            aryPrfTcChunk,
-            lstHrf,
-            varTr,
-            varNumVol,
-            varTmpOvsmpl,
-            queOut,
-            varHrfLen=32.,
-            ):
+def cnvl_tc(idxPrc, aryPrfTcChunk, lstHrf, varTr, varNumVol, varTmpOvsmpl,
+            queOut, varHrfLen=32.):
     """
     Convolution of time courses with HRF model.
     """
@@ -215,7 +186,7 @@ def cnvl_tc(idxPrc,
     # prepare hrf basis functions
     lstBse = []
     for hrfFn in lstHrf:
-        # needs to be a multiple of oversample
+        # needs to be a multiple of varTmpOvsmpl
         vecTmpBse = hrfFn(np.linspace(0, varHrfLen,
                                       (varHrfLen // varTr) * varTmpOvsmpl))
         lstBse.append(vecTmpBse)

@@ -20,7 +20,7 @@
 import numpy as np
 import nibabel as nb
 from pyprf_motion.analysis.utils_general import cls_set_config
-from pyprf_motion.analysis.model_creation_utils import (crt_pw_bxcr_fn,
+from pyprf_motion.analysis.model_creation_utils import (crt_mdl_rsp,
                                                         crt_nrl_tc,
                                                         crt_prf_tc)
 
@@ -66,47 +66,50 @@ def model_creation(dicCnfg):
         # *********************************************************************
 
         # *********************************************************************
-        # *** Create pixel-wise boxcar functions
+        # *** Create 2D Gauss model responses to spatial conditions.
 
-        print('------Create pixel-wise boxcar functions')
+        print('------Create 2D Gauss model responses to spatial conditions')
 
-        aryBoxCar = crt_pw_bxcr_fn(aryTmpExpInf, arySptExpInf, cfg.varTr,
-                                   cfg.varNumVol, cfg.varTmpOvsmpl,
-                                   cfg.varVslSpcSzeX, cfg.varVslSpcSzeY)
+        aryMdlRsp = crt_mdl_rsp(arySptExpInf, (int(cfg.varVslSpcSzeX),
+                                               int(cfg.varVslSpcSzeY)),
+                                cfg.varNumX, cfg.varExtXmin, cfg.varExtXmax,
+                                cfg.varNumY, cfg.varExtYmin, cfg.varExtYmax,
+                                cfg.varNumPrfSizes, cfg.varPrfStdMin,
+                                cfg.varPrfStdMax, cfg.varPar)
 #        del(aryTmpExpInf)
-#        del(arySptExpInf)
-
-        # *********************************************************************
-
-        # *********************************************************************
-        # *** Create neural time course models
-
-        print('------Create neural time course models')
-
-        aryNrlTc = crt_nrl_tc(aryBoxCar, cfg.varNumVol,
-                              (int(cfg.varVslSpcSzeX), int(cfg.varVslSpcSzeY)),
-                              cfg.varNumX, cfg.varExtXmin, cfg.varExtXmax,
-                              cfg.varNumY, cfg.varExtYmin, cfg.varExtYmax,
-                              cfg.varNumPrfSizes, cfg.varPrfStdMin,
-                              cfg.varPrfStdMax, cfg.varTmpOvsmpl, cfg.varPar)
-#        del(aryBoxCar)
         print('------Save')
-        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/modelTest',
-                aryNrlTc)
+        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryMdlRsp',
+                aryMdlRsp)
         print('------Done')
         # *********************************************************************
 
         # *********************************************************************
-        # *** convolve every neural time course model with hrf function(s)
+        # *** Create neural time courses in upsampled space
 
-        print('------Create pRF time course models by convolution')
+        print('------Create temporally upsampled neural time courses')
+
+        aryNrlTc = crt_nrl_tc(aryMdlRsp, aryTmpExpInf, cfg.varTr,
+                              cfg.varNumVol, cfg.varTmpOvsmpl)
+#        del(aryTmpExpInf)
+#        del(aryMdlRsp)
+        print('------Save')
+        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryNrlTc',
+                aryNrlTc)
+        print('------Done')
+
+        # *********************************************************************
+
+        # *********************************************************************
+        # *** Convolve every neural time course model with hrf function(s)
+
+        print('------Create pRF time course models by HRF convolution')
 
         aryPrfTc = crt_prf_tc(aryNrlTc, cfg.varNumVol, cfg.varTr,
                               cfg.varTmpOvsmpl, cfg.switchHrfSet,
                               cfg.tplPngSize, cfg.varPar)
 #        del(aryNrlTc)
         print('------Save')
-        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/modelCnvlTest',
+        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryPrfTc',
                 aryPrfTc)
         print('------Done')
 
