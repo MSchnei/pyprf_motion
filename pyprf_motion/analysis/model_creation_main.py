@@ -105,6 +105,11 @@ def model_creation(dicCnfg):
                               cfg.varTmpOvsmpl, cfg.switchHrfSet,
                               cfg.tplPngSize, cfg.varPar)
 #        del(aryNrlTc)
+        print('------Save')
+        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/modelCnvlTest',
+                aryPrfTc)
+        print('------Done')
+
         # *********************************************************************
 
 #        # *********************************************************************
