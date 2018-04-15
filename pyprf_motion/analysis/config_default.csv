@@ -91,6 +91,10 @@ strPathOut = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/02_MotLoc/pRF_results/pRF
 # CPU, 'gpu' for using GPU.
 strVersion = 'cython'
 
+# which hrf functions should be used?
+# 1: canonical, 2: can and temp derivative, 3: can, temp and spat derivative
+switchHrfSet = 1
+
 # Create pRF time course models?
 lgcCrteMdl = True
 
@@ -102,6 +106,9 @@ strSptExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/sptIn
 
 # Name of the npy that holds temporal info about conditions
 strTmpExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/tmpInfo/aryTmpExpInf.npy'
+
+# Factor by which time courses and HRF will be upsampled for the convolutions
+varTmpOvsmpl = 10.
 
 # Start index of PNG files. For instance, `varStrtIdx = 0` if the name of
 # the first PNG file is `file_000.png`, or `varStrtIdx = 1` if it is

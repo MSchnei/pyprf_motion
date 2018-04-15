@@ -214,6 +214,13 @@ def load_config(strCsvCnfg, lgcTest=False):  #noqa
               + 'or load):')
         print('   ' + str(dicCnfg['strPathMdl']))
 
+    # switch to determine which hrf functions should be used
+    # 1: canonical, 2: can and temp derivative, 3: can, temp and spat deriv
+    dicCnfg['switchHrfSet'] = ast.literal_eval(dicCnfg['switchHrfSet'])
+    if lgcPrint:
+        print('---Switch to determine which hrf functions should be used ')
+        print('   ' + str(dicCnfg['switchHrfSet']))
+
     # If we create new pRF time course models, the following parameters have to
     # be provided:
     if dicCnfg['lgcCrteMdl']:
@@ -221,14 +228,21 @@ def load_config(strCsvCnfg, lgcTest=False):  #noqa
         # Name of the npy that holds spatial info about conditions
         dicCnfg['strSptExpInf'] = ast.literal_eval(dicCnfg['strSptExpInf'])
         if lgcPrint:
-            print('---Path to npy file with spatial condition info: '
-                  + str(dicCnfg['strSptExpInf']))
+            print('---Path to npy file with spatial condition info: ')
+            print('   ' + str(dicCnfg['strSptExpInf']))
 
         # Name of the npy that holds temporal info about conditions
         dicCnfg['strTmpExpInf'] = ast.literal_eval(dicCnfg['strTmpExpInf'])
         if lgcPrint:
-            print('---Path to npy file with temporal condition info: '
-                  + str(dicCnfg['strTmpExpInf']))
+            print('---Path to npy file with temporal condition info: ')
+            print('   ' + str(dicCnfg['strTmpExpInf']))
+
+        # Factor by which time courses and HRF will be upsampled for the
+        # convolutions
+        dicCnfg['varTmpOvsmpl'] = ast.literal_eval(dicCnfg['varTmpOvsmpl'])
+        if lgcPrint:
+            print('---Factor by which time courses and HRF will be upsampled: '
+                  + str(dicCnfg['varTmpOvsmpl']))
 
         # Start index of PNG files. For instance, `varStrtIdx = 0` if the name
         # of the first PNG file is `file_000.png`, or `varStrtIdx = 1` if it is
