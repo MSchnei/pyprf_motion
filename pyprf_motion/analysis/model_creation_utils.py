@@ -19,6 +19,7 @@
 
 import numpy as np
 import multiprocessing as mp
+from copy import deepcopy
 #from PIL import Image
 from pyprf_motion.analysis.utils_hrf import spmt, dspmt, ddspmt, cnvl_tc
 from pyprf_motion.analysis.utils_general import cnvl_2D_gauss
@@ -237,30 +238,28 @@ def crt_nrl_tc(aryMdlRsp, aryTmpExpInf, varTr, varNumVol, varTmpOvsmpl):
     ---------
     [1]
     """
-
     # adjust the input, if necessary, such that input is 2D
-    tplInpShp = aryMdlRsp.shape
+    tplInpShp = deepcopy(aryMdlRsp.shape)
     aryMdlRsp = aryMdlRsp.reshape((-1, aryMdlRsp.shape[-1]))
 
     # create boxcar functions in temporally upsampled space
     print('---------Create boxcar functions for spatial condtions')
     aryBxCarTmp = create_boxcar(aryTmpExpInf[:, 0], aryTmpExpInf[:, 1],
                                 aryTmpExpInf[:, 2], varTr, varNumVol,
-                                oversample=varTmpOvsmpl).T
+                                varTmpOvsmpl=varTmpOvsmpl).T
 
     # pre-allocate pixelwise boxcar array
-    print('---------Insert predicted condition values for all models')
     aryNrlTc = np.zeros((aryMdlRsp.shape[0], aryBxCarTmp.shape[-1]))
+    print('---------Insert predicted condition values for all models')
     # loop through boxcar functions of conditions
     for ind, vecCndOcc in enumerate(aryBxCarTmp):
-        print("-------------Insert condition: " + str(ind))
         # get response predicted by models for this specific spatial condition
         rspValPrdByMdl = aryMdlRsp[:, ind]
         # insert predicted response value several times using broad-casting
         aryNrlTc[..., vecCndOcc.astype('bool')] = rspValPrdByMdl[:, None]
 
     # determine output shape
-    tplOutShp = tplInpShp[:-1] + ((varNumVol*varTmpOvsmpl), )
+    tplOutShp = tplInpShp[:-1] + (int(varNumVol*varTmpOvsmpl), )
 
     return aryNrlTc.reshape(tplOutShp)
 
@@ -304,7 +303,7 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
         lstHrf = [spmt]
 
     # adjust the input, if necessary, such that input is 2D, with last dim time
-    tplInpShp = aryNrlTc.shape
+    tplInpShp = deepcopy(aryNrlTc.shape)
     aryNrlTc = np.reshape(aryNrlTc, (-1, aryNrlTc.shape[-1]))
 
     # Put input data into chunks:

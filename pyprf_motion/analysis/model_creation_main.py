@@ -76,7 +76,7 @@ def model_creation(dicCnfg):
                                 cfg.varNumY, cfg.varExtYmin, cfg.varExtYmax,
                                 cfg.varNumPrfSizes, cfg.varPrfStdMin,
                                 cfg.varPrfStdMax, cfg.varPar)
-#        del(aryTmpExpInf)
+        del(arySptExpInf)
         print('------Save')
         np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryMdlRsp',
                 aryMdlRsp)
@@ -90,8 +90,8 @@ def model_creation(dicCnfg):
 
         aryNrlTc = crt_nrl_tc(aryMdlRsp, aryTmpExpInf, cfg.varTr,
                               cfg.varNumVol, cfg.varTmpOvsmpl)
-#        del(aryTmpExpInf)
-#        del(aryMdlRsp)
+        del(aryTmpExpInf)
+        del(aryMdlRsp)
         print('------Save')
         np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryNrlTc',
                 aryNrlTc)
@@ -106,8 +106,9 @@ def model_creation(dicCnfg):
 
         aryPrfTc = crt_prf_tc(aryNrlTc, cfg.varNumVol, cfg.varTr,
                               cfg.varTmpOvsmpl, cfg.switchHrfSet,
-                              cfg.tplPngSize, cfg.varPar)
-#        del(aryNrlTc)
+                              (int(cfg.varVslSpcSzeX), int(cfg.varVslSpcSzeY)),
+                              cfg.varPar)
+        del(aryNrlTc)
         print('------Save')
         np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryPrfTc',
                 aryPrfTc)
