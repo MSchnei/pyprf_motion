@@ -211,7 +211,7 @@ def crt_mdl_rsp(arySptExpInf, tplPngSize, varNumX, varExtXmin,  varExtXmax,
                 # Increment parameter index:
                 varCntMdlPrms = varCntMdlPrms + 1
 
-    return aryMdlRsp
+    return aryMdlRsp.astype('float16')
 
 
 def crt_nrl_tc(aryMdlRsp, aryTmpExpInf, varTr, varNumVol, varTmpOvsmpl):
@@ -249,7 +249,8 @@ def crt_nrl_tc(aryMdlRsp, aryTmpExpInf, varTr, varNumVol, varTmpOvsmpl):
                                 varTmpOvsmpl=varTmpOvsmpl).T
 
     # pre-allocate pixelwise boxcar array
-    aryNrlTc = np.zeros((aryMdlRsp.shape[0], aryBxCarTmp.shape[-1]))
+    aryNrlTc = np.zeros((aryMdlRsp.shape[0], aryBxCarTmp.shape[-1]),
+                        dtype='float16')
     print('---------Insert predicted condition values for all models')
     # loop through boxcar functions of conditions
     for ind, vecCndOcc in enumerate(aryBxCarTmp):
@@ -261,7 +262,7 @@ def crt_nrl_tc(aryMdlRsp, aryTmpExpInf, varTr, varNumVol, varTmpOvsmpl):
     # determine output shape
     tplOutShp = tplInpShp[:-1] + (int(varNumVol*varTmpOvsmpl), )
 
-    return aryNrlTc.reshape(tplOutShp)
+    return aryNrlTc.reshape(tplOutShp).astype('float16')
 
 
 def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
@@ -360,10 +361,10 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
     del(lstConv)
 
     # Reshape results:
-    tplOutShp = tplInpShp[:-2] + (len(lstHrf), ) + (varNumVol, )
+    tplOutShp = tplInpShp[:3] + (len(lstHrf), ) + (varNumVol, )
 
     # Return:
-    return np.reshape(aryNrlTcConv, tplOutShp)
+    return np.reshape(aryNrlTcConv, tplOutShp).astype('float16')
 
 
 ###############################################################################

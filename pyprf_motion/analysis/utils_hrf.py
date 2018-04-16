@@ -21,6 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division
+from copy import deepcopy
 from functools import partial
 import numpy as np
 import scipy.stats as sps
@@ -170,7 +171,7 @@ def create_boxcar(conditions, onsets, durations, varTr, varNumVol,
     boxcar_out = np.array(boxcar).T
     if boxcar_out.shape[1] == 1:
         boxcar_out = np.squeeze(boxcar_out)
-    return boxcar_out
+    return boxcar_out.astype('float16')
 
 
 def cnvl_tc(idxPrc, aryPrfTcChunk, lstHrf, varTr, varNumVol, varTmpOvsmpl,
@@ -180,7 +181,7 @@ def cnvl_tc(idxPrc, aryPrfTcChunk, lstHrf, varTr, varNumVol, varTmpOvsmpl,
     """
 
     # adjust the input, if necessary, such that input is 2D, with last dim time
-    tplInpShp = aryPrfTcChunk.shape
+    tplInpShp = deepcopy(aryPrfTcChunk.shape)
     aryPrfTcChunk = aryPrfTcChunk.reshape((-1, aryPrfTcChunk.shape[-1]))
 
     # prepare hrf basis functions
@@ -198,8 +199,8 @@ def cnvl_tc(idxPrc, aryPrfTcChunk, lstHrf, varTr, varNumVol, varTmpOvsmpl,
     vecFrmTms = np.arange(0, varTr * varNumVol, varTr / varTmpOvsmpl)
 
     # Prepare an empty array for ouput
-    aryConv = np.zeros((aryPrfTcChunk.shape[0], len(lstHrf),
-                        aryPrfTcChunk.shape[1]))
+    aryConv = np.zeros((aryPrfTcChunk.shape[0], len(lstHrf), varNumVol),
+                       dtype='float16')
     print("---------Process " + str(idxPrc) +
           ": Convolve")
     # Each time course is convolved with the HRF separately, because the
