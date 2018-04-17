@@ -17,9 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Number of x-positions to model:
-varNumX = 60
+varNumX = 68
 # Number of y-positions to model:
-varNumY = 60
+varNumY = 68
 # Number of pRF sizes to model:
 varNumPrfSizes = 40
 
@@ -53,14 +53,11 @@ varVoxRes = 1.2
 
 # Extent of temporal smoothing for fMRI data and pRF time course models
 # [standard deviation of the Gaussian kernel, in seconds]:
-varSdSmthTmp = 2.0
+varSdSmthTmp = 0.0
 
 # Extent of spatial smoothing for fMRI data [standard deviation of the Gaussian
 # kernel, in mm]
-varSdSmthSpt = 1.2
-
-# Perform linear trend removal on fMRI data?
-lgcLinTrnd = False
+varSdSmthSpt = 0.0
 
 # Number of fMRI volumes and png files to load:
 varNumVol = 1232
@@ -79,13 +76,13 @@ varVslSpcSzeY = 128
 
 # Path of functional data (needs to have same number of volumes as there are
 # PNGs):
-lstPathNiiFunc = ['/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/01_origNii/motLoc/demean_rafuncAll_hpf.nii.gz']  #noqa
+lstPathNiiFunc = ['/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/02_convBV/motDepPrf/func04_SlTiSPM_MoCoSPM_hpfFSL_msk_IDENTITY.nii', '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/02_convBV/motDepPrf/func05_SlTiSPM_MoCoSPM_hpfFSL_msk_IDENTITY.nii']
 
 # Path of mask (to restrict pRF model finding):
-strPathNiiMask = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/FuncMask/mfunc02_mean_brain.nii'  #noqa
+strPathNiiMask = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/Anatomy/Session02/S02_msk_test_1_237.nii'
 
 # Output basename:
-strPathOut = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/02_MotLoc/pRF_results/pRF_results_smooth'  #noqa
+strPathOut = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/pRF_results/pRF_results_smooth'
 
 # Which version to use for pRF finding. 'numpy' or 'cython' for pRF finding on
 # CPU, 'gpu' for using GPU.
@@ -102,12 +99,13 @@ lgcCrteMdl = True
 # be provided:
 
 # Name of the npy that holds spatial info about conditions
-strSptExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/sptInfo/arySptExpInf.npy'  #noqa
+strSptExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/sptInfo/arySptExpInf.npy'
 
 # Name of the npy that holds temporal info about conditions
 strTmpExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/tmpInfo/aryTmpExpInf.npy'
 
 # Factor by which time courses and HRF will be upsampled for the convolutions
+# Higher number might yield more accurate reults but also takes up more RAM.
 varTmpOvsmpl = 20.
 
 # Start index of PNG files. For instance, `varStrtIdx = 0` if the name of
@@ -122,4 +120,4 @@ varZfill = 4
 
 # Path to npy file with pRF time course models (to save or laod). Without file
 # extension.
-strPathMdl = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/pRF_results/pRF_model_tc'  #noqa
+strPathMdl = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/pRF_results/pRF_model_tc'

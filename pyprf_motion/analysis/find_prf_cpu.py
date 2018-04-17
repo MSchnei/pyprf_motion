@@ -115,23 +115,6 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
     # i.e. from top to bottom.
     aryFuncChnk = aryFuncChnk.T
 
-    # Prepare data for cython (i.e. accelerated) least squares finding:
-    if strVersion == 'cython':
-        # Instead of fitting a constant term, we subtract the mean from the
-        # data and from the model ("FSL style"). First, we subtract the mean
-        # over time from the data:
-        aryFuncChnkTmean = np.array(np.mean(aryFuncChnk, axis=0), ndmin=2)
-        aryFuncChnk = np.subtract(aryFuncChnk, aryFuncChnkTmean[0, None])
-        # Secondly, we subtract the mean over time form the pRF model time
-        # courses. The array has four dimensions, the 4th is time (one to three
-        # are x-position, y-position, and pRF size (SD)).
-        aryPrfTcTmean = np.mean(aryPrfTc, axis=3)
-        aryPrfTc = np.subtract(aryPrfTc, aryPrfTcTmean[:, :, :, None])
-    # Otherwise, create constant term for numpy least squares finding:
-    elif strVersion == 'numpy':
-        # Constant term for the model:
-        vecConst = np.ones((varNumVol), dtype=np.float32)
-
     # Change type to float 32:
     aryFuncChnk = aryFuncChnk.astype(np.float32)
     aryPrfTc = aryPrfTc.astype(np.float32)
@@ -224,20 +207,13 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
                     elif strVersion == 'numpy':
 
                         # Current pRF time course model:
-                        vecMdlTc = aryPrfTc[idxX, idxY, idxSd, :].flatten()
-
-                        # We create a design matrix including the current pRF
-                        # time course model, and a constant term:
-                        aryDsgn = np.vstack([vecMdlTc,
-                                             vecConst]).T
+                        aryDsgn = aryPrfTc[idxX, idxY, idxSd, :].reshape(-1, 1)
 
                         # Change type to float32:
                         aryDsgn = aryDsgn.astype(np.float32)
 
                         # Calculate the least-squares solution for all voxels:
-                        vecTmpRes = np.linalg.lstsq(aryDsgn,
-                                                    aryFuncChnk,
-                                                    rcond=None)[1]
+                        vecTmpRes = np.linalg.lstsq(aryDsgn, aryFuncChnk)[1]
 
                     # Check whether current residuals are lower than previously
                     # calculated ones:

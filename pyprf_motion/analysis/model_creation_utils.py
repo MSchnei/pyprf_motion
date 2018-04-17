@@ -19,60 +19,23 @@
 
 import numpy as np
 import multiprocessing as mp
+from copy import deepcopy
 #from PIL import Image
 from pyprf_motion.analysis.utils_hrf import spmt, dspmt, ddspmt, cnvl_tc
 from pyprf_motion.analysis.utils_general import cnvl_2D_gauss
 from pyprf_motion.analysis.utils_hrf import create_boxcar
 
 
-def crt_pw_bxcr_fn(aryTmpExpInf, arySptExpInf, varTr, varNumVol, varTmpOvsmpl,
-                   varVslSpcSzeX, varVslSpcSzeY):
-    """Create pixel-wise boxcar functions.
+def crt_mdl_rsp(arySptExpInf, tplPngSize, varNumX, varExtXmin,  varExtXmax,
+                varNumY, varExtYmin, varExtYmax, varNumPrfSizes, varPrfStdMin,
+                varPrfStdMax, varPar):
+    """Create responses of 2D Gauss models to spatial conditions.
 
     Parameters
     ----------
-    input1 : 2d numpy array, shape [n_samples, n_measurements]
-        Description of input 1.
-    input2 : float, positive
-      Description of input 2.
-    Returns
-    -------
-    data : 2d numpy array, shape [n_samples, n_measurements]
-        Closed data.
-    Reference
-    ---------
-    [1]
-    """
-    # create boxcar functions in temporally upsampled space
-    aryBxCarTmp = create_boxcar(aryTmpExpInf[:, 0], aryTmpExpInf[:, 1],
-                                aryTmpExpInf[:, 2], varTr, varNumVol,
-                                oversample=varTmpOvsmpl)
-    # pre-allocate pixelwise boxcar array
-    aryBoxCar = np.zeros((int(varVslSpcSzeX), int(varVslSpcSzeY),
-                          int(varNumVol*varTmpOvsmpl))).astype('int8')
-
-    for ind, vecTmpBxCr in enumerate(aryBxCarTmp.T):
-        # get image
-        ima = arySptExpInf[..., ind].astype('int8')
-        # insert image several times using broad-casting
-        aryBoxCar[..., vecTmpBxCr.astype('bool')] = ima[:, :, None]
-
-    return aryBoxCar
-
-
-def crt_nrl_tc(aryBoxCar, varNumVol, tplPngSize, varNumX,
-               varExtXmin,  varExtXmax, varNumY, varExtYmin, varExtYmax,
-               varNumPrfSizes, varPrfStdMin, varPrfStdMax, varTmpOvsmpl,
-               varPar):
-    """Create neural model time courses from pixel-wise boxcar functions.
-
-    Parameters
-    ----------
-    aryBoxCar : 3d numpy array, shape [n_x_pix, n_y_pix, n_vol]
-        Description of input 1.
-    varNumVol : float, positive
-        Description of input 2.
-    tplPngSize : tuple
+    arySptExpInf : 3d numpy array, shape [n_x_pix, n_y_pix, n_conditions]
+        All spatial conditions stacked along second axis.
+    tplPngSize : tuple, 2
         Description of input 2.
     varNumX : float, positive
         Description of input 2.
@@ -96,8 +59,8 @@ def crt_nrl_tc(aryBoxCar, varNumVol, tplPngSize, varNumX,
         Description of input 2.
     Returns
     -------
-    aryNrlTc : 5d numpy array, shape [n_x_pos, n_y_pos, n_sd, n_mtn_dir, n_vol]
-        Closed data.
+    aryMdlRsp : 4d numpy array, shape [n_x_pos, n_y_pos, n_sd, n_cond]
+        Responses of 2D Gauss models to spatial conditions.
     Reference
     ---------
     [1]
@@ -173,9 +136,8 @@ def crt_nrl_tc(aryBoxCar, varNumVol, tplPngSize, varNumX,
     # Create a queue to put the results in:
     queOut = mp.Queue()
 
-    # Empty list for results from parallel processes (for pRF model time course
-    # results):
-    lstPrfTc = [None] * varPar
+    # Empty list for results from parallel processes (for pRF model responses):
+    lstMdlTc = [None] * varPar
 
     # Empty list for processes:
     lstPrcs = [None] * varPar
@@ -185,9 +147,9 @@ def crt_nrl_tc(aryBoxCar, varNumVol, tplPngSize, varNumX,
     # Create processes:
     for idxPrc in range(0, varPar):
         lstPrcs[idxPrc] = mp.Process(target=cnvl_2D_gauss,
-                                     args=(idxPrc, aryBoxCar,
-                                           lstMdlParams[idxPrc], tplPngSize,
-                                           varNumVol, varTmpOvsmpl, queOut)
+                                     args=(idxPrc, lstMdlParams[idxPrc],
+                                           arySptExpInf, tplPngSize, queOut
+                                           )
                                      )
         # Daemon (kills processes when exiting):
         lstPrcs[idxPrc].Daemon = True
@@ -198,7 +160,7 @@ def crt_nrl_tc(aryBoxCar, varNumVol, tplPngSize, varNumX,
 
     # Collect results from queue:
     for idxPrc in range(0, varPar):
-        lstPrfTc[idxPrc] = queOut.get(True)
+        lstMdlTc[idxPrc] = queOut.get(True)
 
     # Join processes:
     for idxPrc in range(0, varPar):
@@ -206,26 +168,25 @@ def crt_nrl_tc(aryBoxCar, varNumVol, tplPngSize, varNumX,
 
     print('---------Collecting results from parallel processes')
     # Put output arrays from parallel process into one big array
-    lstPrfTc = sorted(lstPrfTc)
-    aryPrfTc = np.empty((0, int(varNumVol*varTmpOvsmpl)))
+    lstMdlTc = sorted(lstMdlTc)
+    aryMdlCndRsp = np.empty((0, arySptExpInf.shape[-1]))
     for idx in range(0, varPar):
-        aryPrfTc = np.concatenate((aryPrfTc, lstPrfTc[idx][1]), axis=0)
+        aryMdlCndRsp = np.concatenate((aryMdlCndRsp, lstMdlTc[idx][1]), axis=0)
 
     # check that all the models were collected correctly
-    assert aryPrfTc.shape[0] == varNumMdls
+    assert aryMdlCndRsp.shape[0] == varNumMdls
 
     # Clean up:
     del(aryMdlParams)
     del(lstMdlParams)
-    del(lstPrfTc)
+    del(lstMdlTc)
 
-    # Array representing the low-resolution visual space, of the form
-    # aryPrfTc[x-position, y-position, pRF-size, varNum Vol], which will hold
-    # the pRF model time courses.
-    aryNrlTc = np.zeros([varNumX, varNumY, varNumPrfSizes,
-                         int(varNumVol*varTmpOvsmpl)])
+    # Array representing model responses to cinditions together with their
+    # model parameters: aryMdlCndRsp[varNumX, varNumY, varNumPrfSizes, n_cond]
+    aryMdlRsp = np.zeros([varNumX, varNumY, varNumPrfSizes,
+                         arySptExpInf.shape[-1]])
 
-    # We use the same loop structure for organising the pRF model time courses
+    # We use the same loop structure for organising the model responses
     # that we used for creating the parameter array. Counter:
     varCntMdlPrms = 0
 
@@ -241,16 +202,67 @@ def crt_nrl_tc(aryBoxCar, varNumVol, tplPngSize, varNumX,
             # Loop through standard deviations (of Gaussian pRF models):
             for idxSd in range(0, varNumPrfSizes):
 
-                # Put the pRF model time course into its correct position in
+                # Put the model responses to cond into its correct position in
                 # the 4D array, leaving out the first column (which contains
                 # the index):
-                aryNrlTc[idxX, idxY, idxSd, :] = aryPrfTc[
-                    varCntMdlPrms, :]
+                aryMdlRsp[idxX, idxY, idxSd, :] = aryMdlCndRsp[varCntMdlPrms,
+                                                               :]
 
                 # Increment parameter index:
                 varCntMdlPrms = varCntMdlPrms + 1
 
-    return aryNrlTc
+    return aryMdlRsp.astype('float16')
+
+
+def crt_nrl_tc(aryMdlRsp, aryTmpExpInf, varTr, varNumVol, varTmpOvsmpl):
+    """Create temporally upsampled neural time courses.
+
+    Parameters
+    ----------
+    aryMdlRsp : 4d numpy array, shape [n_x_pos, n_y_pos, n_sd, n_cond]
+        Responses of 2D Gauss models to spatial conditions.
+    aryTmpExpInf : 2d numpy array, shape [varNumVol, 3]
+        Info about nature, onset and duration of conditions during experiments.
+    varTr : float, positive
+        Time to repeat (TR) of the (fMRI) experiment
+    varNumVol : float, positive
+        Number of data point (volumes) in the (fMRI) data
+    varTmpOvsmpl : float, positive
+        Factor by which the time courses should be temporally upsampled.
+    Returns
+    -------
+    aryNrlTc : 4d numpy array,
+               shape [n_x_pos, n_y_pos, n_sd, varNumVol*varTmpOvsmpl]
+        Neural time course models in temporally upsampled space
+    Reference
+    ---------
+    [1]
+    """
+    # adjust the input, if necessary, such that input is 2D
+    tplInpShp = deepcopy(aryMdlRsp.shape)
+    aryMdlRsp = aryMdlRsp.reshape((-1, aryMdlRsp.shape[-1]))
+
+    # create boxcar functions in temporally upsampled space
+    print('---------Create boxcar functions for spatial condtions')
+    aryBxCarTmp = create_boxcar(aryTmpExpInf[:, 0], aryTmpExpInf[:, 1],
+                                aryTmpExpInf[:, 2], varTr, varNumVol,
+                                varTmpOvsmpl=varTmpOvsmpl).T
+
+    # pre-allocate pixelwise boxcar array
+    aryNrlTc = np.zeros((aryMdlRsp.shape[0], aryBxCarTmp.shape[-1]),
+                        dtype='float16')
+    print('---------Insert predicted condition values for all models')
+    # loop through boxcar functions of conditions
+    for ind, vecCndOcc in enumerate(aryBxCarTmp):
+        # get response predicted by models for this specific spatial condition
+        rspValPrdByMdl = aryMdlRsp[:, ind]
+        # insert predicted response value several times using broad-casting
+        aryNrlTc[..., vecCndOcc.astype('bool')] = rspValPrdByMdl[:, None]
+
+    # determine output shape
+    tplOutShp = tplInpShp[:-1] + (int(varNumVol*varTmpOvsmpl), )
+
+    return aryNrlTc.reshape(tplOutShp).astype('float16')
 
 
 def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
@@ -267,16 +279,17 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
         Time to repeat (TR) of the (fMRI) experiment.
     varTmpOvsmpl : int, positive
         Factor by which the data hs been temporally upsampled.
-    switchHrfSet :
-        Description of input 1.
+    switchHrfSet : int, (1, 2, 3)
+        Switch to determine which hrf basis functions are used
     tplPngSize : tuple
         Description of input 1.
     varPar : int, positive
         Description of input 1.
     Returns
     -------
-    data : 2d numpy array, shape [n_samples, n_measurements]
-        Closed data.
+    aryNrlTcConv : 5d numpy array,
+                   shape [n_x_pos, n_y_pos, n_sd, n_hrf_bases, varNumVol]
+        Neural time courses convolved with HRF basis functions
     Reference
     ---------
     [1]
@@ -291,7 +304,7 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
         lstHrf = [spmt]
 
     # adjust the input, if necessary, such that input is 2D, with last dim time
-    tplInpShp = aryNrlTc.shape
+    tplInpShp = deepcopy(aryNrlTc.shape)
     aryNrlTc = np.reshape(aryNrlTc, (-1, aryNrlTc.shape[-1]))
 
     # Put input data into chunks:
@@ -348,10 +361,10 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
     del(lstConv)
 
     # Reshape results:
-    tplOutShp = tplInpShp[:-2] + (len(lstHrf), ) + (varNumVol, )
+    tplOutShp = tplInpShp[:3] + (len(lstHrf), ) + (varNumVol, )
 
     # Return:
-    return np.reshape(aryNrlTcConv, tplOutShp)
+    return np.reshape(aryNrlTcConv, tplOutShp).astype('float16')
 
 
 ###############################################################################

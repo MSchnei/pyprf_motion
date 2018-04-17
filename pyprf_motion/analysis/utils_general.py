@@ -123,14 +123,13 @@ def crt_2D_gauss(varSizeX, varSizeY, varPosX, varPosY, varSd):
         2d Gaussian.
     Reference
     ---------
-    [1]
+    [1] mathworld.wolfram.com/GaussianFunction.html
     """
     varSizeX = int(varSizeX)
     varSizeY = int(varSizeY)
 
-    # aryX and aryY are in reversed order, this seems to be necessary:
-    aryY, aryX = sp.mgrid[0:varSizeX,
-                          0:varSizeY]
+    # create x and y in meshgrid:
+    aryX, aryY = sp.mgrid[0:varSizeX, 0:varSizeY]
 
     # The actual creation of the Gaussian array:
     aryGauss = (
@@ -142,37 +141,37 @@ def crt_2D_gauss(varSizeX, varSizeY, varPosX, varPosY, varSd):
     return aryGauss
 
 
-def cnvl_2D_gauss(idxPrc, aryBoxCar, aryMdlParamsChnk, tplPngSize, varNumVol,
-                  varTmpOvsmpl, queOut):
-    """Spatially convolve boxcar functions with 2D Gaussian.
+def cnvl_2D_gauss(idxPrc, aryMdlParamsChnk, arySptExpInf, tplPngSize, queOut):
+    """Spatially convolve input with 2D Gaussian model.
 
     Parameters
     ----------
-    idxPrc : 2d numpy array, shape [n_samples, n_measurements]
+    idxPrc : float, positive
         Description of input 1.
-    aryBoxCar : float, positive
-      Description of input 2.
-    aryMdlParamsChnk : 2d numpy array, shape [n_samples, n_measurements]
+    aryMdlParamsChnk : 2d numpy array, shape [n_models, n_model_params]
         Description of input 1.
-    tplPngSize : float, positive
-      Description of input 2.
-    varNumVol : 2d numpy array, shape [n_samples, n_measurements]
-        Description of input 1.
+    arySptExpInf : 3d numpy array, shape [n_x_pix, n_y_pix, n_conditions]
+        All spatial conditions stacked along second axis.
+    tplPngSize : tuple, 2.
+      Pixel dimensions of the visual space in which convolution takes place.
     queOut : float, positive
       Description of input 2.
     Returns
     -------
-    data : 2d numpy array, shape [n_samples, n_measurements]
+    data : 2d numpy array, shape [n_models, n_conditions]
         Closed data.
     Reference
     ---------
     [1]
     """
     # Number of combinations of model parameters in the current chunk:
-    varChnkSze = np.size(aryMdlParamsChnk, axis=0)
+    varChnkSze = aryMdlParamsChnk.shape[0]
 
-    # Output array with pRF model time courses:
-    aryOut = np.zeros([varChnkSze, int(varNumVol*varTmpOvsmpl)])
+    # Number of conditions / time points of the input data
+    varNumLstAx = arySptExpInf.shape[-1]
+
+    # Output array with results of convolution:
+    aryOut = np.zeros((varChnkSze, varNumLstAx))
 
     # Loop through combinations of model parameters:
     for idxMdl in range(0, varChnkSze):
@@ -190,17 +189,15 @@ def cnvl_2D_gauss(idxPrc, aryBoxCar, aryMdlParamsChnk, tplPngSize, varNumVol,
                                 varTmpSd)
 
         # Multiply pixel-time courses with Gaussian pRF models:
-        aryPrfTcTmp = np.multiply(aryBoxCar,
-                                  aryGauss[:, :, None])
+        aryCndTcTmp = np.multiply(arySptExpInf, aryGauss[:, :, None])
 
         # Calculate sum across x- and y-dimensions - the 'area under the
-        # Gaussian surface'. This is essentially an unscaled version of the
-        # pRF time course model (i.e. not yet scaled for size of the pRF).
-        aryPrfTcTmp = np.sum(aryPrfTcTmp, axis=(0, 1))
+        # Gaussian surface'.
+        aryCndTcTmp = np.sum(aryCndTcTmp, axis=(0, 1))
 
         # Put model time courses into function's output with 2d Gaussian
         # arrray:
-        aryOut[idxMdl, :] = aryPrfTcTmp
+        aryOut[idxMdl, :] = aryCndTcTmp
 
     # Put column with the indicies of model-parameter-combinations into the
     # output array (in order to be able to put the pRF model time courses into

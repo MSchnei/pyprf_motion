@@ -149,11 +149,6 @@ def load_config(strCsvCnfg, lgcTest=False):  #noqa
         print('---Extent of spatial smoothing (Gaussian SD in [mm]): '
               + str(dicCnfg['varSdSmthSpt']))
 
-    # Perform linear trend removal on fMRI data?
-    dicCnfg['lgcLinTrnd'] = (dicCnfg['lgcLinTrnd'] == 'True')
-    if lgcPrint:
-        print('---Linear trend removal: ' + str(dicCnfg['lgcLinTrnd']))
-
     # Number of fMRI volumes and png files to load:
     dicCnfg['varNumVol'] = int(dicCnfg['varNumVol'])
     if lgcPrint:
