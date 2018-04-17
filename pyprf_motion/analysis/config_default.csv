@@ -17,9 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Number of x-positions to model:
-varNumX = 60
+varNumX = 68
 # Number of y-positions to model:
-varNumY = 60
+varNumY = 68
 # Number of pRF sizes to model:
 varNumPrfSizes = 40
 
