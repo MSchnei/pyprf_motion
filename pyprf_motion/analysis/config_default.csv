@@ -79,13 +79,13 @@ varVslSpcSzeY = 128
 
 # Path of functional data (needs to have same number of volumes as there are
 # PNGs):
-lstPathNiiFunc = ['/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/01_origNii/motLoc/demean_rafuncAll_hpf.nii.gz']  #noqa
+lstPathNiiFunc = ['/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/02_convBV/motDepPrf/func04_SlTiSPM_MoCoSPM_hpfFSL_msk_IDENTITY.nii', '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/02_convBV/motDepPrf/func05_SlTiSPM_MoCoSPM_hpfFSL_msk_IDENTITY.nii']  #noqa
 
 # Path of mask (to restrict pRF model finding):
-strPathNiiMask = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/FuncMask/mfunc02_mean_brain.nii'  #noqa
+strPathNiiMask = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/Anatomy/Session02/S02_msk_test_1_237.nii'  #noqa
 
 # Output basename:
-strPathOut = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/02_MotLoc/pRF_results/pRF_results_smooth'  #noqa
+strPathOut = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/pRF_results/pRF_results_smooth'  #noqa
 
 # Which version to use for pRF finding. 'numpy' or 'cython' for pRF finding on
 # CPU, 'gpu' for using GPU.
@@ -96,7 +96,7 @@ strVersion = 'cython'
 switchHrfSet = 1
 
 # Create pRF time course models?
-lgcCrteMdl = True
+lgcCrteMdl = False
 
 # If we create new pRF time course models, the following parameters have to
 # be provided:
@@ -108,6 +108,7 @@ strSptExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/sptIn
 strTmpExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/tmpInfo/aryTmpExpInf.npy'
 
 # Factor by which time courses and HRF will be upsampled for the convolutions
+# Higher number might yield more accurate reults but also takes up more RAM.
 varTmpOvsmpl = 20.
 
 # Start index of PNG files. For instance, `varStrtIdx = 0` if the name of

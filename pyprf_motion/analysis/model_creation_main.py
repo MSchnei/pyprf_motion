@@ -116,24 +116,26 @@ def model_creation(dicCnfg):
 
         # *********************************************************************
 
-#        # *********************************************************************
-#        # Debugging feature:
-#        # np.save('/home/john/Desktop/aryPixConv.npy', aryPixConv)
-#        # *********************************************************************
-#
-#        # *********************************************************************
-#        # *** Save pRF time course models
-#
-#        print('------Save pRF time course models to disk')
-#
-#        # Save the 4D array as '*.npy' file:
-#        np.save(cfg.strPathMdl,
-#                aryPrfTc)
-#
-#        # Save 4D array as '*.nii' file (for debugging purposes):
-#        niiPrfTc = nb.Nifti1Image(aryPrfTc, np.eye(4))
-#        nb.save(niiPrfTc, cfg.strPathMdl)
-#        # *********************************************************************
+        # *********************************************************************
+        # Debugging feature:
+        # np.save('/home/john/Desktop/aryPixConv.npy', aryPixConv)
+        # *********************************************************************
+
+        # *********************************************************************
+        # *** Save pRF time course models
+
+        print('------Save pRF time course models to disk')
+
+        # if there is a single dimension, squeeze
+        aryPrfTc = np.squeeze(aryPrfTc)
+
+        # Save the 4D array as '*.npy' file:
+        np.save(cfg.strPathMdl, aryPrfTc)
+
+        # Save 4D array as '*.nii' file (for debugging purposes):
+        niiPrfTc = nb.Nifti1Image(aryPrfTc.astype('float32'), np.eye(4))
+        nb.save(niiPrfTc, cfg.strPathMdl)
+        # *********************************************************************
 
     else:
 
@@ -155,7 +157,7 @@ def model_creation(dicCnfg):
         assert vecPrfTcShp[0] == cfg.varNumX and \
             vecPrfTcShp[1] == cfg.varNumY and \
             vecPrfTcShp[2] == cfg.varNumPrfSizes and \
-            vecPrfTcShp[3] == cfg.varNumMtDrctn, strErrMsg
+            vecPrfTcShp[3] == cfg.varNumVol, strErrMsg
 
     # *************************************************************************
 
