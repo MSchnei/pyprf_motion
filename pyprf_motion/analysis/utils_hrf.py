@@ -186,10 +186,14 @@ def cnvl_tc(idxPrc, aryPrfTcChunk, lstHrf, varTr, varNumVol, varTmpOvsmpl,
 
     # prepare hrf basis functions
     lstBse = []
-    for hrfFn in lstHrf:
+    for fnHrf in lstHrf:
         # needs to be a multiple of varTmpOvsmpl
-        vecTmpBse = hrfFn(np.linspace(0, varHrfLen,
+        vecTmpBse = fnHrf(np.linspace(0, varHrfLen,
                                       (varHrfLen // varTr) * varTmpOvsmpl))
+        # normalise HRF so that the sum of values is 1 (see FSL)
+        # otherwise, after convolution values for predictors are very high
+        vecTmpBse = np.divide(vecTmpBse, np.sum(vecTmpBse))
+
         lstBse.append(vecTmpBse)
 
     # get frame times, i.e. start point of every volume in seconds
@@ -218,7 +222,7 @@ def cnvl_tc(idxPrc, aryPrfTcChunk, lstHrf, varTr, varNumVol, varTmpOvsmpl,
             # get function for downsampling
             f = interp1d(vecFrmTms, col)
             # downsample to original resoltuion to match res of data
-            # take the value from the centre of each volume's period
+            # take the value from the centre of each volume's period (see FSL)
             aryConv[idxTc, indBase, :] = f(vecFrms + varTr/2.)
 
     # determine output shape
