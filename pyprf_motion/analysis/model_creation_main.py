@@ -55,6 +55,15 @@ def model_creation(dicCnfg):
         print('------Load spatial condition information')
 
         arySptExpInf = np.load(cfg.strSptExpInf)
+
+        # Since we assume scientific convention and orientation of images where
+        # the x-axisfalls on the height and the y-axis falls on the width
+        # dimension of the screen and we assume that the first dimension that
+        # the user provides index x and the second y and since python is column
+        # major (i.e. first indexes columns, only then rows), we need to rotate
+        # arySptExpInf by 90 degrees rightward.
+        arySptExpInf = np.rot90(arySptExpInf, k=3)
+
         # *********************************************************************
 
         # *********************************************************************
@@ -78,9 +87,9 @@ def model_creation(dicCnfg):
                                 cfg.varPrfStdMax, cfg.varPar)
         del(arySptExpInf)
         print('------Save')
-        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryMdlRsp',
-                aryMdlRsp)
-        print('------Done')
+#        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryMdlRsp',
+#                aryMdlRsp)
+#        print('------Done')
         # *********************************************************************
 
         # *********************************************************************
@@ -92,10 +101,10 @@ def model_creation(dicCnfg):
                               cfg.varNumVol, cfg.varTmpOvsmpl)
         del(aryTmpExpInf)
         del(aryMdlRsp)
-        print('------Save')
-        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryNrlTc',
-                aryNrlTc)
-        print('------Done')
+#        print('------Save')
+#        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryNrlTc',
+#                aryNrlTc)
+#        print('------Done')
 
         # *********************************************************************
 
@@ -109,10 +118,10 @@ def model_creation(dicCnfg):
                               (int(cfg.varVslSpcSzeX), int(cfg.varVslSpcSzeY)),
                               cfg.varPar)
         del(aryNrlTc)
-        print('------Save')
-        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryPrfTc',
-                aryPrfTc)
-        print('------Done')
+#        print('------Save')
+#        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryPrfTc',
+#                aryPrfTc)
+#        print('------Done')
 
         # *********************************************************************
 
@@ -126,7 +135,10 @@ def model_creation(dicCnfg):
 
         print('------Save pRF time course models to disk')
 
-        # if there is a single dimension, squeeze
+        # The data will come out of the convolution process with an extra
+        # dimension, sinc ein principle different basis functions in addition
+        # to the canonical HRF can be used. But for now the modle fitting can
+        # only handle 1 canonical convolution, so we squeeze here for now.
         aryPrfTc = np.squeeze(aryPrfTc)
 
         # Save the 4D array as '*.npy' file:
