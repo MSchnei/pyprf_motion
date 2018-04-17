@@ -18,7 +18,6 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-from scipy import stats
 from scipy.ndimage.filters import gaussian_filter1d
 from copy import deepcopy
 from pyprf_motion.analysis.utils_general import load_nii
@@ -101,7 +100,18 @@ def prep_models(aryPrfTc, varSdSmthTmp=2.0):
 
     # Z-score the prf time course models
     print('---------Zscore the pRF time course models')
-    aryPrfTc = stats.zscore(aryPrfTc, axis=-1, ddof=2)
+    # De-mean the prf time course models:
+    aryPrfTc = np.subtract(aryPrfTc, np.mean(aryPrfTc, axis=-1)[..., None])
+
+    # Standardize the prf time course models:
+    # In order to avoid devision by zero, only divide those voxels with a
+    # standard deviation greater than zero:
+    aryTmpStd = np.std(aryPrfTc, axis=-1)
+    aryTmpLgc = np.greater(aryTmpStd, np.array([0.0]))
+    aryPrfTc[aryTmpLgc, :] = np.divide(aryPrfTc[aryTmpLgc, :],
+                                       aryTmpStd[aryTmpLgc, None])
+
+    return aryPrfTc
 
 
 def prep_func(strPathNiiMask, lstPathNiiFunc):
