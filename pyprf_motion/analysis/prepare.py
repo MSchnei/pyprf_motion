@@ -75,7 +75,7 @@ def prep_models(aryPrfTc, varSdSmthTmp=2.0):
         # For the filtering to perform well at the ends of the time series, we
         # set the method to 'nearest' and place a volume with mean intensity
         # (over time) at the beginning and at the end.
-        aryPrfTcMean = np.mean(aryPrfTc, axis=-1, keepdims=True)
+        aryPrfTcMean = np.mean(aryPrfTc, axis=-1, keepdims=True).reshape(-1, 1)
 
         aryPrfTc = np.concatenate((aryPrfTcMean, aryPrfTc, aryPrfTcMean),
                                   axis=-1)
@@ -125,17 +125,6 @@ def prep_func(strPathNiiMask, lstPathNiiFunc):
         a value greater than zero in the mask are considered.
     lstPathNiiFunc : list
         List of paths of functional data (nii files).
-    lgcLinTrnd : bool
-        Whether to perform linear trend removal on functional data.
-    varSdSmthTmp : float
-        Extent of temporal smoothing that is applied to functional data and
-        pRF time course models, [SD of Gaussian kernel, in seconds]. If `zero`,
-        no temporal smoothing is applied.
-     varSdSmthSpt : float
-        Extent of spatial smoothing [SD of Gaussian kernel, in mm]. If `zero`,
-        no spatial smoothing is applied.
-    varPar : int
-        Number of processes to run in parallel (multiprocessing).
 
     Returns
     -------
