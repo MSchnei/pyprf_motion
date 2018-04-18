@@ -135,25 +135,19 @@ def load_config(strCsvCnfg, lgcTest=False):  #noqa
         print('---Voxel resolution of fMRI data [mm]: '
               + str(dicCnfg['varVoxRes']))
 
-    # Extent of temporal smoothing for fMRI data and pRF time course models
-    # [standard deviation of the Gaussian kernel, in seconds]:
-    dicCnfg['varSdSmthTmp'] = float(dicCnfg['varSdSmthTmp'])
-    if lgcPrint:
-        print('---Extent of temporal smoothing (Gaussian SD in [s]): '
-              + str(dicCnfg['varSdSmthTmp']))
-
-    # Extent of spatial smoothing for fMRI data [standard deviation of the
-    # Gaussian kernel, in mm]
-    dicCnfg['varSdSmthSpt'] = float(dicCnfg['varSdSmthSpt'])
-    if lgcPrint:
-        print('---Extent of spatial smoothing (Gaussian SD in [mm]): '
-              + str(dicCnfg['varSdSmthSpt']))
-
     # Number of fMRI volumes and png files to load:
     dicCnfg['varNumVol'] = int(dicCnfg['varNumVol'])
     if lgcPrint:
         print('---Total number of fMRI volumes and png files: '
               + str(dicCnfg['varNumVol']))
+
+    # Extent of temporal smoothing for fMRI data and pRF time course models
+    # [standard deviation of the Gaussian kernel, in seconds]:
+    # same temporal smoothing will be applied to pRF model time courses
+    dicCnfg['varSdSmthTmp'] = float(dicCnfg['varSdSmthTmp'])
+    if lgcPrint:
+        print('---Extent of temporal smoothing (Gaussian SD in [s]): '
+              + str(dicCnfg['varSdSmthTmp']))
 
     # Number of processes to run in parallel:
     dicCnfg['varPar'] = int(dicCnfg['varPar'])
@@ -161,12 +155,12 @@ def load_config(strCsvCnfg, lgcTest=False):  #noqa
         print('---Number of processes to run in parallel: '
               + str(dicCnfg['varPar']))
 
-    # Size of high-resolution visual space model in which the pRF models are
+    # Size of space model in which the pRF models are
     # created (x- and y-dimension).
     dicCnfg['tplVslSpcSze'] = tuple([int(dicCnfg['varVslSpcSzeX']),
                                      int(dicCnfg['varVslSpcSzeY'])])
     if lgcPrint:
-        print('---Size of high-resolution visual space model (x & y): '
+        print('---Size of visual space model (x & y): '
               + str(dicCnfg['tplVslSpcSze']))
 
     # Path(s) of functional data:
@@ -238,22 +232,6 @@ def load_config(strCsvCnfg, lgcTest=False):  #noqa
         if lgcPrint:
             print('---Factor by which time courses and HRF will be upsampled: '
                   + str(dicCnfg['varTmpOvsmpl']))
-
-        # Start index of PNG files. For instance, `varStrtIdx = 0` if the name
-        # of the first PNG file is `file_000.png`, or `varStrtIdx = 1` if it is
-        # `file_001.png`.
-        dicCnfg['varStrtIdx'] = int(dicCnfg['varStrtIdx'])
-        if lgcPrint:
-            print('---Start index of PNG files: '
-                  + str(dicCnfg['varStrtIdx']))
-
-        # Zero padding of PNG file names. For instance, `varStrtIdx = 3` if the
-        # name of PNG files is `file_007.png`, or `varStrtIdx = 4` if it is
-        # `file_0007.png`.
-        dicCnfg['varZfill'] = int(dicCnfg['varZfill'])
-        if lgcPrint:
-            print('---Zero padding of PNG file names: '
-                  + str(dicCnfg['varZfill']))
 
     # Is this a test?
     if lgcTest:

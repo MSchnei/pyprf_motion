@@ -51,21 +51,18 @@ varTr = 2.0
 # Voxel resolution of the fMRI data [mm]:
 varVoxRes = 1.2
 
-# Extent of temporal smoothing for fMRI data and pRF time course models
-# [standard deviation of the Gaussian kernel, in seconds]:
-varSdSmthTmp = 0.0
-
-# Extent of spatial smoothing for fMRI data [standard deviation of the Gaussian
-# kernel, in mm]
-varSdSmthSpt = 0.0
-
 # Number of fMRI volumes and png files to load:
 varNumVol = 1232
+
+# Extent of temporal smoothing for fMRI data and pRF time course models
+# [standard deviation of the Gaussian kernel, in seconds]:
+# same temporal smoothing will be applied to pRF model time courses
+varSdSmthTmp = 0.0
 
 # Number of processes to run in parallel:
 varPar = 8
 
-# Size of high-resolution visual space model in which the pRF models are
+# Size of visual space model in which the pRF models are
 # created (x- and y-dimension). The x and y dimensions specified here need to
 # be the same integer multiple of the number of x- and y-positions to model, as
 # specified above. In other words, if the the resolution in x-direction of the
@@ -76,20 +73,20 @@ varVslSpcSzeY = 128
 
 # Path of functional data (needs to have same number of volumes as there are
 # PNGs):
-lstPathNiiFunc = ['/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/02_convBV/motDepPrf/func04_SlTiSPM_MoCoSPM_hpfFSL_msk_IDENTITY.nii', '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/02_convBV/motDepPrf/func05_SlTiSPM_MoCoSPM_hpfFSL_msk_IDENTITY.nii']
+lstPathNiiFunc = ['/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/motLoc/func01_SlTiSPM_MoCoSPM_hpfFSL_msk.nii', '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/motLoc/func02_SlTiSPM_MoCoSPM_hpfFSL_msk.nii', '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/motLoc/func03_SlTiSPM_MoCoSPM_hpfFSL_msk.nii', '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/motLoc/func04_SlTiSPM_MoCoSPM_hpfFSL_msk.nii']
 
 # Path of mask (to restrict pRF model finding):
-strPathNiiMask = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/Anatomy/Session02/S02_msk_test_1_237.nii'
+strPathNiiMask = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/Anatomy/Session02/S02_slabMsk_noWM.nii'
 
 # Output basename:
-strPathOut = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/pRF_results/pRF_results_smooth'
+strPathOut = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/pRF_results/pRF_results'
 
 # Which version to use for pRF finding. 'numpy' or 'cython' for pRF finding on
 # CPU, 'gpu' for using GPU.
 strVersion = 'cython'
 
 # which hrf functions should be used?
-# 1: canonical, 2: can and temp derivative, 3: can, temp and spat derivative
+# 1: only canonical, 2: can and temp derivative, 3: can, temp and spat derivative
 switchHrfSet = 1
 
 # Create pRF time course models?
@@ -107,16 +104,6 @@ strTmpExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/tmpIn
 # Factor by which time courses and HRF will be upsampled for the convolutions
 # Higher number might yield more accurate reults but also takes up more RAM.
 varTmpOvsmpl = 20.
-
-# Start index of PNG files. For instance, `varStrtIdx = 0` if the name of
-# the first PNG file is `file_000.png`, or `varStrtIdx = 1` if it is
-# `file_001.png`.
-varStrtIdx = 0
-
-# Zero padding of PNG file names. For instance, `varStrtIdx = 3` if the
-# name of PNG files is `file_007.png`, or `varStrtIdx = 4` if it is
-# `file_0007.png`.
-varZfill = 4
 
 # Path to npy file with pRF time course models (to save or laod). Without file
 # extension.
