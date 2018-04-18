@@ -94,8 +94,8 @@ for idx in np.arange(len(lstNii)):
 
     # Create output nii object:
     objIma = Nifti1Image(aryData,
-                         header=fnFmriData.get_header(),
-                         affine=fnFmriData.get_affine()
+                         header=fnFmriData.header,
+                         affine=fnFmriData.affine
                          )
 
     # Save as nii:
