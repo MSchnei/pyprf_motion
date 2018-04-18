@@ -1,7 +1,7 @@
 # Motion pRF mapping experiment parameter definitions.
 
-# Part of py_pRF_mapping library
-# Copyright (C) 2016  Ingo Marquardt
+# Part of py_pRF_motion library
+# Copyright (C) 2016  Marian Schneider, Ingo Marquardt
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -73,20 +73,20 @@ varVslSpcSzeY = 128
 
 # Path of functional data (needs to have same number of volumes as there are
 # PNGs):
-lstPathNiiFunc = ['/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/motLoc/func01_SlTiSPM_MoCoSPM_hpfFSL_msk.nii', '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/motLoc/func02_SlTiSPM_MoCoSPM_hpfFSL_msk.nii', '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/motLoc/func03_SlTiSPM_MoCoSPM_hpfFSL_msk.nii', '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/motLoc/func04_SlTiSPM_MoCoSPM_hpfFSL_msk.nii']
+lstPathNiiFunc = ['~/fnc01.nii', '~/fnc02.nii', '~/fnc03.nii', '~/fnc04.nii']
 
 # Path of mask (to restrict pRF model finding):
-strPathNiiMask = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/Anatomy/Session02/S02_slabMsk_noWM.nii'
+strPathNiiMask = '~/mask.nii'
 
 # Output basename:
-strPathOut = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/pRF_results/pRF_results'
+strPathOut = '~/pRF_results/pRF_results'
 
 # Which version to use for pRF finding. 'numpy' or 'cython' for pRF finding on
 # CPU, 'gpu' for using GPU.
 strVersion = 'cython'
 
 # which hrf functions should be used?
-# 1: only canonical, 2: can and temp derivative, 3: can, temp and spat derivative
+# 1: only canonical, 2: can and temp deriv, 3: can, temp and spat deriv
 switchHrfSet = 1
 
 # Create pRF time course models?
@@ -96,10 +96,10 @@ lgcCrteMdl = True
 # be provided:
 
 # Name of the npy that holds spatial info about conditions
-strSptExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/sptInfo/arySptExpInf.npy'
+strSptExpInf = '~/expInfo/sptInfo/arySptExpInf.npy'
 
 # Name of the npy that holds temporal info about conditions
-strTmpExpInf = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/expInfo/tmpInfo/aryTmpExpInf.npy'
+strTmpExpInf = '~/expInfo/tmpInfo/aryTmpExpInf.npy'
 
 # Factor by which time courses and HRF will be upsampled for the convolutions
 # Higher number might yield more accurate reults but also takes up more RAM.
@@ -107,4 +107,4 @@ varTmpOvsmpl = 20.
 
 # Path to npy file with pRF time course models (to save or laod). Without file
 # extension.
-strPathMdl = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/pRF_results/pRF_model_tc'
+strPathMdl = '~/pRF_results/pRF_model_tc'
