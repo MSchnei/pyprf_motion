@@ -71,11 +71,9 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     if ((cfg.strVersion == 'cython') or (cfg.strVersion == 'numpy')):
         from pyprf_motion.analysis.find_prf_cpu import find_prf_cpu
 
-    # Convert preprocessing parameters (for temporal and spatial smoothing)
-    # from SI units (i.e. [s] and [mm]) into units of data array (volumes and
-    # voxels):
+    # Convert preprocessing parameters (for temporal smoothing)
+    # from SI units (i.e. [s]) into units of data array (volumes):
     cfg.varSdSmthTmp = np.divide(cfg.varSdSmthTmp, cfg.varTr)
-    cfg.varSdSmthSpt = np.divide(cfg.varSdSmthSpt, cfg.varVoxRes)
     # *************************************************************************
 
     # *************************************************************************
