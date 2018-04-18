@@ -21,7 +21,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division
-from copy import deepcopy
 from functools import partial
 import numpy as np
 import scipy.stats as sps
@@ -181,7 +180,7 @@ def cnvl_tc(idxPrc, aryPrfTcChunk, lstHrf, varTr, varNumVol, varTmpOvsmpl,
     """
 
     # adjust the input, if necessary, such that input is 2D, with last dim time
-    tplInpShp = deepcopy(aryPrfTcChunk.shape)
+    tplInpShp = aryPrfTcChunk.shape
     aryPrfTcChunk = aryPrfTcChunk.reshape((-1, aryPrfTcChunk.shape[-1]))
 
     # prepare hrf basis functions

@@ -19,7 +19,6 @@
 
 import numpy as np
 import multiprocessing as mp
-from copy import deepcopy
 from pyprf_motion.analysis.utils_hrf import spmt, dspmt, ddspmt, cnvl_tc
 from pyprf_motion.analysis.utils_general import cnvl_2D_gauss
 from pyprf_motion.analysis.utils_hrf import create_boxcar
@@ -238,7 +237,7 @@ def crt_nrl_tc(aryMdlRsp, aryTmpExpInf, varTr, varNumVol, varTmpOvsmpl):
     [1]
     """
     # adjust the input, if necessary, such that input is 2D
-    tplInpShp = deepcopy(aryMdlRsp.shape)
+    tplInpShp = aryMdlRsp.shape
     aryMdlRsp = aryMdlRsp.reshape((-1, aryMdlRsp.shape[-1]))
 
     # create boxcar functions in temporally upsampled space
@@ -303,7 +302,7 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
         lstHrf = [spmt]
 
     # adjust the input, if necessary, such that input is 2D, with last dim time
-    tplInpShp = deepcopy(aryNrlTc.shape)
+    tplInpShp = aryNrlTc.shape
     aryNrlTc = np.reshape(aryNrlTc, (-1, aryNrlTc.shape[-1]))
 
     # Put input data into chunks:
