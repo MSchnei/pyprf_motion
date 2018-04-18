@@ -94,9 +94,6 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
     # Number of voxels to be fitted in this chunk:
     varNumVoxChnk = aryFuncChnk.shape[0]
 
-    # Number of volumes:
-    varNumVol = aryFuncChnk.shape[1]
-
     # Vectors for pRF finding results [number-of-voxels times one]:
     vecBstXpos = np.zeros(varNumVoxChnk)
     vecBstYpos = np.zeros(varNumVoxChnk)

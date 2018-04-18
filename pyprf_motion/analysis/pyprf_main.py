@@ -34,7 +34,7 @@ from pyprf_motion.analysis.model_creation_main import model_creation
 from pyprf_motion.analysis.prepare import prep_models, prep_func
 
 ###### DEBUGGING ###############
-#strCsvCnfg = "/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/config_default.csv"
+#strCsvCnfg = "/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/S02_config_MotLoc.csv"
 #lgcTest = False
 ################################
 
