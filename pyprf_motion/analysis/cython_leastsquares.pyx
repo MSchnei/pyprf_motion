@@ -92,17 +92,18 @@ cpdef np.ndarray[np.float32_t, ndim=1] cy_lst_sq(
 
 
     # Call optimised cdef function for calculation of residuals:
-    vecRes_view = funcCyRes(vecPrfTc_view,
-                            aryFuncChnk_view,
-                            vecRes_view,
-                            varNumVoxChnk,
-                            varNumVols,
-                            varVarY)
+    vecRes_view, vecPe_view = funcCyRes(vecPrfTc_view,
+                                        aryFuncChnk_view,
+                                        vecRes_view,
+                                        varNumVoxChnk,
+                                        varNumVols,
+                                        varVarY)
 
     # Convert memory view to numpy array before returning it:
     vecRes = np.asarray(vecRes_view)
+    vecPe = np.asarray(vecPe_view)
 
-    return vecRes
+    return vecRes, vecPe
 # *****************************************************************************
 
 
@@ -112,6 +113,7 @@ cpdef np.ndarray[np.float32_t, ndim=1] cy_lst_sq(
 cdef float[:] funcCyRes(float[:] vecPrfTc_view,
                         float[:, :] aryFuncChnk_view,
                         float[:] vecRes_view,
+                        float[:] vecPe_view,
                         unsigned long varNumVoxChnk,
                         unsigned int varNumVols,
                         float varVarY):
@@ -144,7 +146,8 @@ cdef float[:] funcCyRes(float[:] vecPrfTc_view,
             varRes += (aryFuncChnk_view[idxVol, idxVox] - varXhat) ** 2
 
         vecRes_view[idxVox] = varRes
+        vecPe_view[idxVox] = varSlope
 
-    # Return memory view:
-    return vecRes_view
+    # Return memory viewL
+    return vecRes_view, vecPe_view
 # *****************************************************************************

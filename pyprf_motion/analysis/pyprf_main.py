@@ -164,6 +164,8 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
                                                lstFunc[idxPrc],
                                                aryPrfTc,
                                                cfg.strVersion,
+                                               cfg.lgcXval,
+                                               cfg.numXval,
                                                queOut)
                                          )
             # Daemon (kills processes when exiting):
