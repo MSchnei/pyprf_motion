@@ -307,7 +307,12 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
     # measured time course (xval=True) or the coefficient of determination
     # (xval=False) for each voxel.
 
-    if np.invert(lgcXval):
+    if lgcXval:
+        # Still needs to be implemented
+        # For now return the average prediction error
+        vecBstR2 = vecBstRes
+
+    else:
         # To calculate the coefficient of determination, we start with the
         # total sum of squares (i.e. the deviation of the data from the mean).
         # The mean of each time course:
