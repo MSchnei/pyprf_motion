@@ -226,7 +226,7 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
                                 # A cython function is used to calculate the
                                 # parameter estimates of the current model:
                                 vecTmpPe = cy_lst_sq(vecMdlTrn,
-                                                     aryFuncChnkTrn)[1]
+                                                     aryFuncChnkTrn)[1, :]
 
                             # Numpy version:
                             elif strVersion == 'numpy':
@@ -238,7 +238,8 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
                                 # Numpy linalg.lstsq is used to calculate the
                                 # parameter estimates of the current model:
                                 vecTmpPe = np.linalg.lstsq(vecMdlTrn,
-                                                           aryFuncChnkTrn)[0]
+                                                           aryFuncChnkTrn,
+                                                           rcond=-1)[0]
 
                             # calculate model prediction time course
                             aryMdlPrdTc = np.dot(
@@ -267,7 +268,7 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
                             # residuals of the current model:
                             vecTmpRes = cy_lst_sq(
                                 aryPrfTc[idxX, idxY, idxSd, :],
-                                aryFuncChnk)[0]
+                                aryFuncChnk)[0, :]
 
                         # Numpy version:
                         elif strVersion == 'numpy':
@@ -279,8 +280,8 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
 
                             # Numpy linalg.lstsq is used to calculate the
                             # residuals of the current model:
-                            vecTmpRes = np.linalg.lstsq(vecDsgn,
-                                                        aryFuncChnk)[1]
+                            vecTmpRes = np.linalg.lstsq(vecDsgn, aryFuncChnk,
+                                                        rcond=-1)[1]
 
                     # Check whether current crossvalidation error (xval=True)
                     # or residuals (xval=False) are lower than previously
