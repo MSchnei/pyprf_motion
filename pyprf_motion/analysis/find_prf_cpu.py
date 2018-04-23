@@ -19,12 +19,12 @@
 
 import numpy as np
 from sklearn.model_selection import KFold
-from pyprf_motion.analysis.utils_general import cls_set_config
-from pyprf_motion.analysis.cython_leastsquares import cy_lst_sq
+from pyprf_motion.analysis.cython_leastsquares import cy_lst_sq, cy_lst_sq_xval
 
 
 def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
-                 aryFuncChnk, aryPrfTc, strVersion, lgcXval, varNxval, queOut):
+                 aryFuncChnk, aryPrfTc, strVersion, lgcXval, varNumXval,
+                 queOut):
     """
     Find best fitting pRF model for voxel time course, using the CPU.
 
@@ -51,7 +51,7 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
         Which version to use for pRF finding; 'numpy' or 'cython'.
     lgcXval: boolean
         Logical to determine whether we cross-validate.
-    varNxval: int
+    varNumXval: int
         Number of folds for k-fold cross-validation.
     queOut : multiprocessing.queues.Queue
         Queue to put the results on.
@@ -82,12 +82,6 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
     multiprocessing queue. This version performs the model finding on the CPU,
     using numpy or cython (depending on the value of `strVersion`).
     """
-#    # Load config parameters from dictionary into namespace:
-#    cfg = cls_set_config(dicCnfg)
-
-    # Conditional imports:
-    #if cfg.strVersion == 'cython':
-    #    from cython_leastsquares import cy_lst_sq
 
     # Number of modelled x-positions in the visual space:
     varNumX = aryPrfTc.shape[0]
@@ -121,10 +115,22 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
     aryFuncChnk = aryFuncChnk.astype(np.float32)
     aryPrfTc = aryPrfTc.astype(np.float32)
 
-    # if lgc for Xval is true we already prepare the iterator for xvalidation
+    # if lgc for Xval is true we already prepare indices for xvalidation
     if lgcXval:
-        itXval = KFold(n_splits=varNxval)
-        vecSplts = np.arange(aryPrfTc.shape[-1], dtype=np.int64)
+        # obtain iterator for cross-validation
+        itXval = KFold(n_splits=varNumXval)
+        vecSplts = np.arange(aryPrfTc.shape[-1], dtype=np.int32)
+
+        # prepare lists that will hold indices for xvalidation
+        lstIdxTrn = []
+        lstIdxtst = []
+        # Loop over the cross-validations to put indcies in array
+        for idxTrn, idxTst in itXval.split(vecSplts):
+            lstIdxTrn.append(idxTrn)
+            lstIdxtst.append(idxTst)
+        # trun lists into array
+        aryIdxTrn = np.stack(lstIdxTrn, axis=-1).astype(np.int32)
+        aryIdxTst = np.stack(lstIdxtst, axis=-1).astype(np.int32)
 
     # Prepare status indicator if this is the first of the parallel processes:
     if idxPrc == 0:
@@ -205,31 +211,41 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
                         # calculate the cross-validation error for the current
                         # model for all voxel time courses.
 
-                        # pre-allocate ary to collect cross-validation error
-                        # for every xval fold
-                        vecTmpResXVal = np.empty((varNumVoxChnk, varNxval),
-                                                 dtype=np.float32)
+                        # Cython version:
+                        if strVersion == 'cython':
 
-                        # Loop over the cross-validations
-                        for idxXval, (idxTrn, idxTst) in enumerate(
-                                itXval.split(vecSplts)):
-                            # Get pRF time course models for trn and tst:
-                            vecMdlTrn = aryPrfTc[idxX, idxY, idxSd, idxTrn]
-                            vecMdlTst = aryPrfTc[idxX, idxY, idxSd, idxTst]
-                            # Get functional data for trn and tst:
-                            aryFuncChnkTrn = aryFuncChnk[idxTrn, :]
-                            aryFuncChnkTst = aryFuncChnk[idxTst, :]
+                            vecMdl = aryPrfTc[idxX, idxY, idxSd, :]
 
-                            # Cython version:
-                            if strVersion == 'cython':
+                            # A cython function is used to loop over the folds
+                            # of the cross-validation, and within each fold to
+                            # calculate the parameter estimates of the current
+                            # model and the crossvalidation error:
+                            aryResXval = cy_lst_sq_xval(vecMdl,
+                                                        aryFuncChnk,
+                                                        aryIdxTrn,
+                                                        aryIdxTst)
 
-                                # A cython function is used to calculate the
-                                # parameter estimates of the current model:
-                                vecTmpPe = cy_lst_sq(vecMdlTrn,
-                                                     aryFuncChnkTrn)[1, :]
+                        # Numpy version:
+                        elif strVersion == 'numpy':
 
-                            # Numpy version:
-                            elif strVersion == 'numpy':
+                            # pre-allocate ary to collect cross-validation
+                            # error for every xval fold
+                            aryResXval = np.empty((varNumVoxChnk,
+                                                   varNumXval),
+                                                  dtype=np.float32)
+
+                            # loop over cross-validation folds
+                            for idxXval in range(varNumXval):
+                                # Get pRF time course models for trn and tst:
+                                vecMdlTrn = aryPrfTc[idxX, idxY, idxSd,
+                                                     aryIdxTrn[:, idxXval]]
+                                vecMdlTst = aryPrfTc[idxX, idxY, idxSd,
+                                                     aryIdxTst[:, idxXval]]
+                                # Get functional data for trn and tst:
+                                aryFuncChnkTrn = aryFuncChnk[
+                                        aryIdxTrn[:, idxXval], :]
+                                aryFuncChnkTst = aryFuncChnk[
+                                        aryIdxTst[:, idxXval], :]
 
                                 # Reshape pRF time course model so it has the
                                 # required shape for np.linalg.lstsq
@@ -241,20 +257,20 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
                                                            aryFuncChnkTrn,
                                                            rcond=-1)[0]
 
-                            # calculate model prediction time course
-                            aryMdlPrdTc = np.dot(
-                                np.reshape(vecMdlTst, (-1, 1)),
-                                np.reshape(vecTmpPe, (1, -1)))
+                                # calculate model prediction time course
+                                aryMdlPrdTc = np.dot(
+                                    np.reshape(vecMdlTst, (-1, 1)),
+                                    np.reshape(vecTmpPe, (1, -1)))
 
-                            # calculate residual sum of squares between
-                            # test data and model prediction time course
-                            vecTmpResXVal[:, idxXval] = np.sum(
-                                (np.subtract(aryFuncChnkTst,
-                                             aryMdlPrdTc))**2, axis=0)
+                                # calculate residual sum of squares between
+                                # test data and model prediction time course
+                                aryResXval[:, idxXval] = np.sum(
+                                    (np.subtract(aryFuncChnkTst,
+                                                 aryMdlPrdTc))**2, axis=0)
 
                         # calculate the average cross validation error across
                         # all folds
-                        vecTmpRes = np.mean(vecTmpResXVal, axis=1)
+                        vecTmpRes = np.mean(aryResXval, axis=1)
 
                     else:
                         # We do not crossvalidate. In this case, we calculate
@@ -268,7 +284,7 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
                             # residuals of the current model:
                             vecTmpRes = cy_lst_sq(
                                 aryPrfTc[idxX, idxY, idxSd, :],
-                                aryFuncChnk)[0, :]
+                                aryFuncChnk)
 
                         # Numpy version:
                         elif strVersion == 'numpy':
