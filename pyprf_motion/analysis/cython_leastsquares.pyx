@@ -218,7 +218,7 @@ cpdef np.ndarray[np.float32_t, ndim=2] cy_lst_sq_xval(
                                                                 varNumXval,
                                                                 dtype=np.float32)
     # Memory view on array for residuals (here crossvalidation error)
-    cdef float[:] aryResXval_view = aryResXval
+    cdef float[:, :] aryResXval_view = aryResXval
 
     # Calculate variance of pRF model time course (i.e. variance in the model):
     varNumVols = int(vecPrfTc.shape[0])
@@ -233,7 +233,7 @@ cpdef np.ndarray[np.float32_t, ndim=2] cy_lst_sq_xval(
     aryResXval_view = func_cy_res_xval(vecPrfTc_view,
                                        aryFuncChnk_view,
                                        aryIdxTrn_view,
-                                       aryIdxTst_view
+                                       aryIdxTst_view,
                                        aryResXval_view,
                                        varNumXval,
                                        varNumVoxChnk,
@@ -255,7 +255,7 @@ cdef float[:, :] func_cy_res_xval(float[:] vecPrfTc_view,
                                   float[:, :] aryFuncChnk_view,
                                   int[:, :] aryIdxTrn_view,
                                   int[:, :] aryIdxTst_view,
-                                  float[:] aryResXval_view,
+                                  float[:, :] aryResXval_view,
                                   unsigned int varNumXval,
                                   unsigned long varNumVoxChnk,
                                   unsigned int varNumVolsTrn,
@@ -265,19 +265,24 @@ cdef float[:, :] func_cy_res_xval(float[:] vecPrfTc_view,
     cdef float varCovXy, varRes, varSlope, varXhat
     cdef unsigned int idxVol, idxXval
     cdef unsigned long idxVox
+    cdef int[:] vecIdxTrn_view, vecIdxTst_view
     cdef float[:] vecPrfTcTrn_view, vecPrfTcTst_view
     cdef float[:, :] aryFuncChnkTrn_view, aryFuncChnkTst_view
 
     # Loop through cross-validations
     for idxXval in range(varNumXval):
 
+        # get vector with current training and test indices
+        vecIdxTrn_view = aryIdxTrn_view[:, idxXval]
+        vecIdxTst_view = aryIdxTst_view[:, idxXval]
+
         # Get pRF time course models for trn and tst:
-        vecPrfTcTrn_view = vecPrfTc_view[aryIdxTrn_view[:, idxXval]]
-        vecPrfTcTst_view = vecPrfTc_view[aryIdxTst_view[:, idxXval]]
+        vecPrfTcTrn_view = vecPrfTc_view.base[vecIdxTrn_view]
+        vecPrfTcTst_view = vecPrfTc_view.base[vecIdxTst_view]
 
         # Get functional data for trn and tst:
-        aryFuncChnkTrn_view = aryFuncChnk_view[aryIdxTrn_view[:, idxXval], :]
-        aryFuncChnkTst_view = aryFuncChnk_view[aryIdxTst_view[:, idxXval], :]
+        aryFuncChnkTrn_view = aryFuncChnk_view.base[vecIdxTrn_view, :]
+        aryFuncChnkTst_view = aryFuncChnk_view.base[vecIdxTst_view, :]
 
         # Loop through voxels:
         for idxVox in range(varNumVoxChnk):
