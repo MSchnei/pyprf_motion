@@ -38,7 +38,7 @@ cpdef np.ndarray[np.float32_t, ndim=2] cy_lst_sq_xval(
     np.ndarray[np.float32_t, ndim=1] vecPrfTc,
     np.ndarray[np.float32_t, ndim=2] aryFuncChnk,
     np.ndarray[np.int32_t, ndim=2] aryIdxTrn,
-    np.ndarray[np.int32_t, ndim=2] aryIdxTst    
+    np.ndarray[np.int32_t, ndim=2] aryIdxTst
     ):
     """
     Cythonised least squares GLM model fitting with cross validation.
@@ -74,8 +74,11 @@ cpdef np.ndarray[np.float32_t, ndim=2] cy_lst_sq_xval(
     Needs to be compiled before execution (see `cython_leastsquares_setup.py`).
     """
 
-#    cdef float varVarY = 0
     cdef float[:] vecPrfTc_view = vecPrfTc
+    cdef float [:, :] aryFuncChnk_view = aryFuncChnk
+    cdef int [:, :] aryIdxTrn_view = aryIdxTrn
+    cdef int [:, :] aryIdxTst_view = aryIdxTst
+
     cdef unsigned long varNumVoxChnk, idxVox
     cdef unsigned int idxVol, idxXval, varNumXval
     cdef int[:] vecIdxTrn
@@ -85,31 +88,23 @@ cpdef np.ndarray[np.float32_t, ndim=2] cy_lst_sq_xval(
     # Number of cross-validations:
     varNumXval = int(aryIdxTrn.shape[-1])
 
-    # Memory view on numpy array with functional data:
-    cdef float [:, :] aryFuncChnk_view = aryFuncChnk
-
-    # Memory views on training indices
-    cdef int [:, :] aryIdxTrn_view = aryIdxTrn
-    # Memory views on test indices
-    cdef int [:, :] aryIdxTst_view = aryIdxTst
-
     # Define 2D array for residuals (here crossvalidation error) of least
-    # squares solution):
-    cdef np.ndarray[np.float32_t, ndim=2] aryResXval = np.zeros(varNumVoxChnk,
-                                                                varNumXval,
+    # squares solution), initialized with all zeros here:
+    cdef np.ndarray[np.float32_t, ndim=2] aryResXval = np.zeros((varNumVoxChnk,
+                                                                 varNumXval),
                                                                 dtype=np.float32)
     # Memory view on array for residuals (here crossvalidation error)
     cdef float[:, :] aryResXval_view = aryResXval
 
-    # Define 1D array for variances in training model time courses across folds
+    # Define 1D array for variances in training model time courses across folds,
+    # initialized with all zeros here
     cdef np.ndarray[np.float32_t, ndim=1] vecVarY = np.zeros(varNumXval,
                                                              dtype=np.float32)
-
     # Memory view on array for variances in training model time courses:
     cdef float[:] vecVarY_view = vecVarY
 
     # Calculate variance of training pRF model time course (i.e. variance in
-    # the model) - separately for every fold:    
+    # the model) - separately for every fold:
     for idxXval in range(varNumXval):
         # get vector with volumes for training
         vecIdxTrn = aryIdxTrn_view[:, idxXval]
@@ -159,11 +154,11 @@ cdef float[:, :] func_cy_res_xval(float[:] vecPrfTc_view,
 
         # Loop through voxels:
         for idxVox in range(varNumVoxChnk):
-    
+
             # Covariance and residuals of current voxel:
             varCovXy = 0
             varRes = 0
-    
+
             # Loop through trainings volumes and calculate covariance between
             # the training model and the current voxel:
             for idxVol in vecIdxTrn_view:
@@ -180,7 +175,7 @@ cdef float[:, :] func_cy_res_xval(float[:] vecPrfTc_view,
                 varXhat = vecPrfTc_view[idxVol] * varSlope
                 # Mismatch between prediction and actual voxel value (variance):
                 varRes += (aryFuncChnk_view[idxVol, idxVox] - varXhat) ** 2
-    
+
             aryResXval_view[idxVox, idxXval] = varRes
 
     # Return memory view
