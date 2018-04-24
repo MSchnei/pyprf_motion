@@ -18,12 +18,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
+from sklearn.model_selection import KFold
 from pyprf_motion.analysis.utils_general import cls_set_config
 from pyprf_motion.analysis.cython_leastsquares import cy_lst_sq
 
 
 def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
-                 aryFuncChnk, aryPrfTc, strVersion, queOut):
+                 aryFuncChnk, aryPrfTc, strVersion, lgcXval, varNxval, queOut):
     """
     Find best fitting pRF model for voxel time course, using the CPU.
 
@@ -48,6 +49,10 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
         aryPrfTc[x-pos, y-pos, SD, motion-direction, time]
     strVersion : str
         Which version to use for pRF finding; 'numpy' or 'cython'.
+    lgcXval: boolean
+        Logical to determine whether we cross-validate.
+    varNxval: int
+        Number of folds for k-fold cross-validation.
     queOut : multiprocessing.queues.Queue
         Queue to put the results on.
 
@@ -77,8 +82,8 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
     multiprocessing queue. This version performs the model finding on the CPU,
     using numpy or cython (depending on the value of `strVersion`).
     """
-    # Load config parameters from dictionary into namespace:
-    cfg = cls_set_config(dicCnfg)
+#    # Load config parameters from dictionary into namespace:
+#    cfg = cls_set_config(dicCnfg)
 
     # Conditional imports:
     #if cfg.strVersion == 'cython':
@@ -103,7 +108,7 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
     # Vector for best R-square value. For each model fit, the R-square value is
     # compared to this, and updated if it is lower than the best-fitting
     # solution so far. We initialise with an arbitrary, high value
-    vecBstRes = np.add(np.zeros(varNumVoxChnk), 100000000.0).astype(np.float32)
+    vecBstRes = np.add(np.zeros(varNumVoxChnk), np.inf).astype(np.float32)
 
     # Vector that will hold the temporary residuals from the model fitting:
     # vecTmpRes = np.zeros(varNumVoxChnk).astype(np.float32)
@@ -115,6 +120,11 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
     # Change type to float 32:
     aryFuncChnk = aryFuncChnk.astype(np.float32)
     aryPrfTc = aryPrfTc.astype(np.float32)
+
+    # if lgc for Xval is true we already prepare the iterator for xvalidation
+    if lgcXval:
+        itXval = KFold(n_splits=varNxval)
+        vecSplts = np.arange(aryPrfTc.shape[-1], dtype=np.int64)
 
     # Prepare status indicator if this is the first of the parallel processes:
     if idxPrc == 0:
@@ -188,31 +198,93 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
                 # Only fit pRF model if variance is not zero:
                 if np.greater(aryPrfTcVar[idxX, idxY, idxSd], varZero32):
 
-                    # Calculation of the ratio of the explained variance (R
-                    # square) for the current model for all voxel time courses.
+                    # Check whether we need to crossvalidate
+                    if lgcXval:
+                        # We do crossvalidate. In this case, we loop through
+                        # the different folds of the crossvalidation and
+                        # calculate the cross-validation error for the current
+                        # model for all voxel time courses.
 
-                    # Cython version:
-                    if strVersion == 'cython':
+                        # pre-allocate ary to collect cross-validation error
+                        # for every xval fold
+                        vecTmpResXVal = np.empty((varNumVoxChnk, varNxval),
+                                                 dtype=np.float32)
 
-                        # A cython function is used to calculate the residuals
-                        # of the current model:
-                        vecTmpRes = cy_lst_sq(
-                            aryPrfTc[idxX, idxY, idxSd, :].flatten(),
-                            aryFuncChnk)
+                        # Loop over the cross-validations
+                        for idxXval, (idxTrn, idxTst) in enumerate(
+                                itXval.split(vecSplts)):
+                            # Get pRF time course models for trn and tst:
+                            vecMdlTrn = aryPrfTc[idxX, idxY, idxSd, idxTrn]
+                            vecMdlTst = aryPrfTc[idxX, idxY, idxSd, idxTst]
+                            # Get functional data for trn and tst:
+                            aryFuncChnkTrn = aryFuncChnk[idxTrn, :]
+                            aryFuncChnkTst = aryFuncChnk[idxTst, :]
 
-                    # Numpy version:
-                    elif strVersion == 'numpy':
+                            # Cython version:
+                            if strVersion == 'cython':
 
-                        # Current pRF time course model:
-                        aryDsgn = aryPrfTc[idxX, idxY, idxSd, :].reshape(-1, 1)
+                                # A cython function is used to calculate the
+                                # parameter estimates of the current model:
+                                vecTmpPe = cy_lst_sq(vecMdlTrn,
+                                                     aryFuncChnkTrn)[1, :]
 
-                        # Change type to float32:
-                        aryDsgn = aryDsgn.astype(np.float32)
+                            # Numpy version:
+                            elif strVersion == 'numpy':
 
-                        # Calculate the least-squares solution for all voxels:
-                        vecTmpRes = np.linalg.lstsq(aryDsgn, aryFuncChnk)[1]
+                                # Reshape pRF time course model so it has the
+                                # required shape for np.linalg.lstsq
+                                vecMdlTrn = np.reshape(vecMdlTrn, (-1, 1))
 
-                    # Check whether current residuals are lower than previously
+                                # Numpy linalg.lstsq is used to calculate the
+                                # parameter estimates of the current model:
+                                vecTmpPe = np.linalg.lstsq(vecMdlTrn,
+                                                           aryFuncChnkTrn,
+                                                           rcond=-1)[0]
+
+                            # calculate model prediction time course
+                            aryMdlPrdTc = np.dot(
+                                np.reshape(vecMdlTst, (-1, 1)),
+                                np.reshape(vecTmpPe, (1, -1)))
+
+                            # calculate residual sum of squares between
+                            # test data and model prediction time course
+                            vecTmpResXVal[:, idxXval] = np.sum(
+                                (np.subtract(aryFuncChnkTst,
+                                             aryMdlPrdTc))**2, axis=0)
+
+                        # calculate the average cross validation error across
+                        # all folds
+                        vecTmpRes = np.mean(vecTmpResXVal, axis=1)
+
+                    else:
+                        # We do not crossvalidate. In this case, we calculate
+                        # the ratio of the explained variance (R squared)
+                        # for the current model for all voxel time courses.
+
+                        # Cython version:
+                        if strVersion == 'cython':
+
+                            # A cython function is used to calculate the
+                            # residuals of the current model:
+                            vecTmpRes = cy_lst_sq(
+                                aryPrfTc[idxX, idxY, idxSd, :],
+                                aryFuncChnk)[0, :]
+
+                        # Numpy version:
+                        elif strVersion == 'numpy':
+
+                            # Reshape pRF time course model so it has the
+                            # required shape for np.linalg.lstsq
+                            vecDsgn = np.reshape(
+                                aryPrfTc[idxX, idxY, idxSd, :], (-1, 1))
+
+                            # Numpy linalg.lstsq is used to calculate the
+                            # residuals of the current model:
+                            vecTmpRes = np.linalg.lstsq(vecDsgn, aryFuncChnk,
+                                                        rcond=-1)[1]
+
+                    # Check whether current crossvalidation error (xval=True)
+                    # or residuals (xval=False) are lower than previously
                     # calculated ones:
                     vecLgcTmpRes = np.less(vecTmpRes, vecBstRes)
 
@@ -232,20 +304,30 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
                     varCntSts02 = varCntSts02 + 1
 
     # After finding the best fitting model for each voxel, we still have to
-    # calculate the coefficient of determination (R-squared) for each voxel. We
-    # start by calculating the total sum of squares (i.e. the deviation of the
-    # data from the mean). The mean of each time course:
-    vecFuncMean = np.mean(aryFuncChnk, axis=0)
-    # Deviation from the mean for each datapoint:
-    vecFuncDev = np.subtract(aryFuncChnk, vecFuncMean[None, :])
-    # Sum of squares:
-    vecSsTot = np.sum(np.power(vecFuncDev,
-                               2.0),
-                      axis=0)
-    # Coefficient of determination:
-    vecBstR2 = np.subtract(1.0,
-                           np.divide(vecBstRes,
-                                     vecSsTot))
+    # calculate the average correlation coefficient between predicted and
+    # measured time course (xval=True) or the coefficient of determination
+    # (xval=False) for each voxel.
+
+    if lgcXval:
+        # Still needs to be implemented
+        # For now return the average prediction error
+        vecBstR2 = vecBstRes
+
+    else:
+        # To calculate the coefficient of determination, we start with the
+        # total sum of squares (i.e. the deviation of the data from the mean).
+        # The mean of each time course:
+        vecFuncMean = np.mean(aryFuncChnk, axis=0)
+        # Deviation from the mean for each datapoint:
+        vecFuncDev = np.subtract(aryFuncChnk, vecFuncMean[None, :])
+        # Sum of squares:
+        vecSsTot = np.sum(np.power(vecFuncDev,
+                                   2.0),
+                          axis=0)
+        # Coefficient of determination:
+        vecBstR2 = np.subtract(1.0,
+                               np.divide(vecBstRes,
+                                         vecSsTot))
 
     # Output list:
     lstOut = [idxPrc,

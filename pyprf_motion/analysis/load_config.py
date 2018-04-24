@@ -210,6 +210,13 @@ def load_config(strCsvCnfg, lgcTest=False):  #noqa
         print('---Switch to determine which hrf functions should be used: '
               + str(dicCnfg['switchHrfSet']))
 
+    # should model fitting be based on k-fold cross-validation?
+    # if not, set to 1
+    dicCnfg['varNumXval'] = ast.literal_eval(dicCnfg['varNumXval'])
+    if lgcPrint:
+        print('---Model fitting will have this number of folds for xval: '
+              + str(dicCnfg['varNumXval']))
+
     # If we create new pRF time course models, the following parameters have to
     # be provided:
     if dicCnfg['lgcCrteMdl']:

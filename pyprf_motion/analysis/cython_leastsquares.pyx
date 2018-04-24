@@ -35,7 +35,7 @@ from libc.math cimport pow, sqrt
 # *****************************************************************************
 # *** Main function for least squares solution
 
-cpdef np.ndarray[np.float32_t, ndim=1] cy_lst_sq(
+cpdef np.ndarray[np.float32_t, ndim=2] cy_lst_sq(
     np.ndarray[np.float32_t, ndim=1] vecPrfTc,
     np.ndarray[np.float32_t, ndim=2] aryFuncChnk):
     """
@@ -77,44 +77,55 @@ cpdef np.ndarray[np.float32_t, ndim=1] cy_lst_sq(
     # solution):
     cdef np.ndarray[np.float32_t, ndim=1] vecRes = np.zeros(varNumVoxChnk,
                                                             dtype=np.float32)
-    # Memory view on array for results:
+    # Memory view on array for residuals:
     cdef float[:] vecRes_view = vecRes
+    
+    # Define 1D array for results (i.e. for parameter estimates of least
+    # squares solution):
+    cdef np.ndarray[np.float32_t, ndim=1] vecPe = np.zeros(varNumVoxChnk,
+                                                            dtype=np.float32)
+    # Memory view on array for parameter estimates
+    cdef float[:] vecPe_view = vecPe
 
     # Memory view on numpy array with functional data:
     cdef float [:, :] aryFuncChnk_view = aryFuncChnk
-
 
     # Calculate variance of pRF model time course (i.e. variance in the model):
     varNumVols = int(vecPrfTc.shape[0])
     for idxVol in range(varNumVols):
         varVarY += vecPrfTc_view[idxVol] ** 2
 
-
-
     # Call optimised cdef function for calculation of residuals:
-    vecRes_view = funcCyRes(vecPrfTc_view,
-                            aryFuncChnk_view,
-                            vecRes_view,
-                            varNumVoxChnk,
-                            varNumVols,
-                            varVarY)
+    vecRes_view, vecPe_view = funcCyRes(vecPrfTc_view,
+                                        aryFuncChnk_view,
+                                        vecRes_view,
+                                        vecPe_view,
+                                        varNumVoxChnk,
+                                        varNumVols,
+                                        varVarY)
 
     # Convert memory view to numpy array before returning it:
     vecRes = np.asarray(vecRes_view)
+    vecPe = np.asarray(vecPe_view)
 
-    return vecRes
+    # Stack the arrays:
+    aryReturn = np.vstack((vecRes, vecPe))
+
+    return aryReturn
+
 # *****************************************************************************
 
 
 # *****************************************************************************
 # *** Function for fast calculation of residuals
 
-cdef float[:] funcCyRes(float[:] vecPrfTc_view,
-                        float[:, :] aryFuncChnk_view,
-                        float[:] vecRes_view,
-                        unsigned long varNumVoxChnk,
-                        unsigned int varNumVols,
-                        float varVarY):
+cdef (float[:], float[:]) funcCyRes(float[:] vecPrfTc_view,
+                                    float[:, :] aryFuncChnk_view,
+                                    float[:] vecRes_view,
+                                    float[:] vecPe_view,
+                                    unsigned long varNumVoxChnk,
+                                    unsigned int varNumVols,
+                                    float varVarY):
 
     cdef float varCovXy, varRes, varSlope, varXhat
     cdef unsigned int idxVol
@@ -144,7 +155,8 @@ cdef float[:] funcCyRes(float[:] vecPrfTc_view,
             varRes += (aryFuncChnk_view[idxVol, idxVox] - varXhat) ** 2
 
         vecRes_view[idxVox] = varRes
+        vecPe_view[idxVox] = varSlope
 
-    # Return memory view:
-    return vecRes_view
+    # Return memory view
+    return vecRes_view, vecPe_view
 # *****************************************************************************

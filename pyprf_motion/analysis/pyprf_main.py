@@ -146,6 +146,16 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     # We don't need the original array with the functional data anymore:
     del(aryFunc)
 
+    # check whether we need to crossvalidate
+    if np.greater(cfg.varNumXval, 1):
+        cfg.lgcXval = True
+    elif np.equal(cfg.varNumXval, 1):
+        cfg.lgcXval = False
+    else:
+        print("Please set number of crossvalidation folds (numXval) to 1 \
+              (meaning no cross validation) or greater than 1 (meaning number \
+              of corss validation folds)")
+
     # CPU version (using numpy or cython for pRF finding):
     if ((cfg.strVersion == 'numpy') or (cfg.strVersion == 'cython')):
 
@@ -164,6 +174,8 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
                                                lstFunc[idxPrc],
                                                aryPrfTc,
                                                cfg.strVersion,
+                                               cfg.lgcXval,
+                                               cfg.varNumXval,
                                                queOut)
                                          )
             # Daemon (kills processes when exiting):
