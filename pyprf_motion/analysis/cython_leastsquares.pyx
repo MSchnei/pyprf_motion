@@ -65,10 +65,11 @@ cpdef np.ndarray[np.float32_t, ndim=1] cy_lst_sq(
     (see `cython_leastsquares_setup.py`).
     """
 
-    cdef float varVarY = 0
-    cdef float[:] vecPrfTc_view = vecPrfTc
-    cdef unsigned long varNumVoxChnk, idxVox
-    cdef unsigned int idxVol, varNumVols
+    cdef:
+        float varVarY = 0
+        float[:] vecPrfTc_view = vecPrfTc
+        unsigned long varNumVoxChnk, idxVox
+        unsigned int idxVol, varNumVols
 
     # Number of voxels in the input data chunk:
     varNumVoxChnk = int(aryFuncChnk.shape[1])
@@ -88,8 +89,6 @@ cpdef np.ndarray[np.float32_t, ndim=1] cy_lst_sq(
     varNumVols = int(vecPrfTc.shape[0])
     for idxVol in range(varNumVols):
         varVarY += vecPrfTc_view[idxVol] ** 2
-
-
 
     # Call optimised cdef function for calculation of residuals:
     vecRes_view = func_cy_res(vecPrfTc_view,
@@ -115,9 +114,10 @@ cdef float[:] func_cy_res(float[:] vecPrfTc_view,
                           unsigned int varNumVols,
                           float varVarY):
 
-    cdef float varCovXy, varRes, varSlope, varXhat
-    cdef unsigned int idxVol
-    cdef unsigned long idxVox
+    cdef:
+        float varCovXy, varRes, varSlope, varXhat
+        unsigned int idxVol
+        unsigned long idxVox
 
     # Loop through voxels:
     for idxVox in range(varNumVoxChnk):
@@ -190,26 +190,30 @@ cpdef np.ndarray[np.float32_t, ndim=2] cy_lst_sq_xval(
     Assumes removal of the mean from the functional data and the model.
     Needs to be compiled before execution (see `cython_leastsquares_setup.py`).
     """
-
-    cdef float[:] vecPrfTc_view = vecPrfTc
-    cdef float [:, :] aryFuncChnk_view = aryFuncChnk
-    cdef int [:, :] aryIdxTrn_view = aryIdxTrn
-    cdef int [:, :] aryIdxTst_view = aryIdxTst
-
-    cdef unsigned long varNumVoxChnk, idxVox
-    cdef unsigned int idxVol, idxXval, varNumXval
-    cdef int[:] vecIdxTrn
+    cdef:
+        float[:] vecPrfTc_view = vecPrfTc
+        float [:, :] aryFuncChnk_view = aryFuncChnk
+        int [:, :] aryIdxTrn_view = aryIdxTrn
+        int [:, :] aryIdxTst_view = aryIdxTst
+        unsigned long varNumVoxChnk, idxVox
+        unsigned int idxVol, idxXval, varNumXval, varNumVolTrn, varNumVolTst
+        int[:] vecIdxTrn
 
     # Number of voxels in the input data chunk:
     varNumVoxChnk = int(aryFuncChnk.shape[1])
     # Number of cross-validations:
     varNumXval = int(aryIdxTrn.shape[1])
+    # Number of training volumes
+    varNumVolTrn = int(aryIdxTrn.shape[0])
+    # Number of testing volumes
+    varNumVolTst = int(aryIdxTst.shape[0])
 
     # Define 2D array for residuals (here crossvalidation error) of least
     # squares solution), initialized with all zeros here:
     cdef np.ndarray[np.float32_t, ndim=2] aryResXval = np.zeros((varNumVoxChnk,
                                                                  varNumXval),
                                                                 dtype=np.float32)
+
     # Memory view on array for residuals (here crossvalidation error)
     cdef float[:, :] aryResXval_view = aryResXval
 
@@ -236,6 +240,8 @@ cpdef np.ndarray[np.float32_t, ndim=2] cy_lst_sq_xval(
                                        aryResXval_view,
                                        varNumXval,
                                        varNumVoxChnk,
+                                       varNumVolTrn,
+                                       varNumVolTst,
                                        vecVarY_view)
 
     # Convert memory view to numpy array before returning it:
@@ -255,19 +261,17 @@ cdef float[:, :] func_cy_res_xval(float[:] vecPrfTc_view,
                                   float[:, :] aryResXval_view,
                                   unsigned int varNumXval,
                                   unsigned long varNumVoxChnk,
+                                  unsigned int varNumVolTrn,
+                                  unsigned int varNumVolTst,
                                   float[:] vecVarY_view):
 
-    cdef float varVarY, varCovXy, varRes, varSlope, varXhat
-    cdef unsigned int idxVol, idxXval
-    cdef unsigned long idxVox
-    cdef int[:] vecIdxTrn, vecIdxTst_view
+    cdef:
+        float varVarY, varCovXy, varRes, varSlope, varXhat
+        unsigned int idxVol, idxXval, idxItr
+        unsigned long idxVox
 
     # Loop through cross-validations
     for idxXval in range(varNumXval):
-
-        # get vector with current training and test volumes
-        vecIdxTrn = aryIdxTrn_view[:, idxXval]
-        vecIdxTst = aryIdxTst_view[:, idxXval]
 
         # Loop through voxels:
         for idxVox in range(varNumVoxChnk):
@@ -278,7 +282,10 @@ cdef float[:, :] func_cy_res_xval(float[:] vecPrfTc_view,
 
             # Loop through trainings volumes and calculate covariance between
             # the training model and the current voxel:
-            for idxVol in vecIdxTrn:
+            for idxItr in range(varNumVolTrn):
+                # get the training volume
+                idxVol = aryIdxTrn_view[idxItr, idxXval]
+                # calculate covariance
                 varCovXy += (aryFuncChnk_view[idxVol, idxVox]
                              * vecPrfTc_view[idxVol])
             # Get the variance of the training model time courses for this fold
@@ -288,7 +295,9 @@ cdef float[:, :] func_cy_res_xval(float[:] vecPrfTc_view,
 
             # Loop through test volumes and calculate the predicted time course
             # value and the mismatch between prediction and actual voxel value
-            for idxVol in vecIdxTst:
+            for idxItr in range(varNumVolTst):
+                # get the test volume
+                idxVol = aryIdxTst_view[idxItr, idxXval]
                 # The predicted voxel time course value:
                 varXhat = vecPrfTc_view[idxVol] * varSlope
                 # Mismatch between prediction and actual voxel value (variance):

@@ -34,8 +34,8 @@ from pyprf_motion.analysis.model_creation_main import model_creation
 from pyprf_motion.analysis.prepare import prep_models, prep_func
 
 ###### DEBUGGING ###############
-# strCsvCnfg = "/home/marian/Documents/Testing/pyprf_motion_xval/test_config_cython_xval.csv"
-# lgcTest = False
+#strCsvCnfg = "/home/marian/Documents/Testing/pyprf_motion_xval/test_config_cython_xval.csv"
+#lgcTest = False
 ################################
 
 def pyprf(strCsvCnfg, lgcTest=False):  #noqa
