@@ -243,9 +243,9 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
                                                      aryIdxTst[:, idxXval]]
                                 # Get functional data for trn and tst:
                                 aryFuncChnkTrn = aryFuncChnk[
-                                        aryIdxTrn[:, idxXval], :]
+                                    aryIdxTrn[:, idxXval], :]
                                 aryFuncChnkTst = aryFuncChnk[
-                                        aryIdxTst[:, idxXval], :]
+                                    aryIdxTst[:, idxXval], :]
 
                                 # Reshape pRF time course model so it has the
                                 # required shape for np.linalg.lstsq

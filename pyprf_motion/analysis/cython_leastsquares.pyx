@@ -203,7 +203,7 @@ cpdef np.ndarray[np.float32_t, ndim=2] cy_lst_sq_xval(
     # Number of voxels in the input data chunk:
     varNumVoxChnk = int(aryFuncChnk.shape[1])
     # Number of cross-validations:
-    varNumXval = int(aryIdxTrn.shape[-1])
+    varNumXval = int(aryIdxTrn.shape[1])
 
     # Define 2D array for residuals (here crossvalidation error) of least
     # squares solution), initialized with all zeros here:
@@ -260,14 +260,14 @@ cdef float[:, :] func_cy_res_xval(float[:] vecPrfTc_view,
     cdef float varVarY, varCovXy, varRes, varSlope, varXhat
     cdef unsigned int idxVol, idxXval
     cdef unsigned long idxVox
-    cdef int[:] vecIdxTrn_view, vecIdxTst_view
+    cdef int[:] vecIdxTrn, vecIdxTst_view
 
     # Loop through cross-validations
     for idxXval in range(varNumXval):
 
         # get vector with current training and test volumes
-        vecIdxTrn_view = aryIdxTrn_view[:, idxXval]
-        vecIdxTst_view = aryIdxTst_view[:, idxXval]
+        vecIdxTrn = aryIdxTrn_view[:, idxXval]
+        vecIdxTst = aryIdxTst_view[:, idxXval]
 
         # Loop through voxels:
         for idxVox in range(varNumVoxChnk):
@@ -278,16 +278,17 @@ cdef float[:, :] func_cy_res_xval(float[:] vecPrfTc_view,
 
             # Loop through trainings volumes and calculate covariance between
             # the training model and the current voxel:
-            for idxVol in vecIdxTrn_view:
+            for idxVol in vecIdxTrn:
                 varCovXy += (aryFuncChnk_view[idxVol, idxVox]
                              * vecPrfTc_view[idxVol])
-            # get the variance in trainings model time courses for this fold
+            # Get the variance of the training model time courses for this fold
             varVarY = vecVarY_view[idxXval]
             # Obtain the slope of the regression of the model on the data:
             varSlope = varCovXy / varVarY
 
-            # calculate model prediction time course
-            for idxVol in vecIdxTst_view:
+            # Loop through test volumes and calculate the predicted time course
+            # value and the mismatch between prediction and actual voxel value
+            for idxVol in vecIdxTst:
                 # The predicted voxel time course value:
                 varXhat = vecPrfTc_view[idxVol] * varSlope
                 # Mismatch between prediction and actual voxel value (variance):
