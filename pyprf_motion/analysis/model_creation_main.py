@@ -95,7 +95,6 @@ def model_creation(dicCnfg):
                                                int(cfg.varVslSpcSzeY)),
                                 aryMdlParams, cfg.varPar)
         del(arySptExpInf)
-        del(aryMdlParams)
 #        print('------Save')
 #        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryMdlRsp',
 #                aryMdlRsp)
@@ -155,6 +154,7 @@ def model_creation(dicCnfg):
         np.save(cfg.strPathMdl, aryPrfTc)
         # Save the corresponding model parameters
         np.save(cfg.strPathMdl + "_params", aryMdlParams)
+        del(aryMdlParams)
 
         # *********************************************************************
 
