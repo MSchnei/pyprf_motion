@@ -22,9 +22,8 @@ from sklearn.model_selection import KFold
 from pyprf_motion.analysis.cython_leastsquares import cy_lst_sq, cy_lst_sq_xval
 
 
-def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
-                 aryFuncChnk, aryPrfTc, strVersion, lgcXval, varNumXval,
-                 queOut):
+def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
+                 lgcXval, varNumXval, queOut):
     """
     Find best fitting pRF model for voxel time course, using the CPU.
 
@@ -34,19 +33,13 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
         Process ID of the process calling this function (for CPU
         multi-threading). In GPU version, this parameter is 0 (just one thread
         on CPU).
-    dicCnfg : dict
-        Dictionary containing config parameters.
-    vecMdlXpos : np.array
-        1D array with pRF model x positions.
-    vecMdlYpos : np.array
-        1D array with pRF model y positions.
-    vecMdlSd : np.array
-        1D array with pRF model sizes (SD of Gaussian).
     aryFunc : np.array
         2D array with functional MRI data, with shape aryFunc[voxel, time].
     aryPrfTc : np.array
         Array with pRF model time courses, with shape
-        aryPrfTc[x-pos, y-pos, SD, motion-direction, time]
+        aryPrfTc[x-pos*y-pos*SD, number of volumes]
+    aryMdlParams : np.array
+        2D array with all pRF model parameter combination.
     strVersion : str
         Which version to use for pRF finding; 'numpy' or 'cython'.
     lgcXval: boolean
@@ -83,12 +76,8 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
     using numpy or cython (depending on the value of `strVersion`).
     """
 
-    # Number of modelled x-positions in the visual space:
-    varNumX = aryPrfTc.shape[0]
-    # Number of modelled y-positions in the visual space:
-    varNumY = aryPrfTc.shape[1]
-    # Number of modelled pRF sizes:
-    varNumPrfSizes = aryPrfTc.shape[2]
+    # Number of models in the visual space:
+    varNumMdls = aryPrfTc.shape[0]
 
     # Number of voxels to be fitted in this chunk:
     varNumVoxChnk = aryFuncChnk.shape[0]
@@ -139,9 +128,6 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
         # algorithm. Number of steps of the status indicator:
         varStsStpSze = 20
 
-        # Number of pRF models to fit:
-        varNumMdls = (varNumX * varNumY * varNumPrfSizes)
-
         # Vector with pRF values at which to give status feedback:
         vecStatPrf = np.linspace(0,
                                  varNumMdls,
@@ -167,157 +153,153 @@ def find_prf_cpu(idxPrc, dicCnfg, vecMdlXpos, vecMdlYpos, vecMdlSd,  #noqa
     # models that are not actually responsive to the stimuli). For time
     # efficiency, and in order to avoid division by zero, we ignore these
     # model time courses.
-    aryPrfTcVar = np.var(aryPrfTc, axis=3)
+    aryPrfTcVar = np.var(aryPrfTc, axis=1)
 
     # Zero with float32 precision for comparison:
     varZero32 = np.array(([0.0])).astype(np.float32)[0]
 
     # Loop through pRF models:
-    for idxX in range(0, varNumX):
+    for idxMdl in range(0, varNumMdls):
 
-        for idxY in range(0, varNumY):
+        # Status indicator (only used in the first of the parallel
+        # processes):
+        if idxPrc == 0:
 
-            for idxSd in range(0, varNumPrfSizes):
+            # Status indicator:
+            if varCntSts02 == vecStatPrf[varCntSts01]:
 
-                # Status indicator (only used in the first of the parallel
-                # processes):
-                if idxPrc == 0:
+                # Prepare status message:
+                strStsMsg = ('------------Progress: ' +
+                             str(vecStatPrc[varCntSts01]) +
+                             ' % --- ' +
+                             str(vecStatPrf[varCntSts01]) +
+                             ' pRF models out of ' +
+                             str(varNumMdls))
 
-                    # Status indicator:
-                    if varCntSts02 == vecStatPrf[varCntSts01]:
+                print(strStsMsg)
 
-                        # Prepare status message:
-                        strStsMsg = ('------------Progress: ' +
-                                     str(vecStatPrc[varCntSts01]) +
-                                     ' % --- ' +
-                                     str(vecStatPrf[varCntSts01]) +
-                                     ' pRF models out of ' +
-                                     str(varNumMdls))
+                # Only increment counter if the last value has not been
+                # reached yet:
+                if varCntSts01 < varStsStpSze:
+                    varCntSts01 = varCntSts01 + int(1)
 
-                        print(strStsMsg)
+        # Only fit pRF model if variance is not zero:
+        if np.greater(aryPrfTcVar[idxMdl], varZero32):
 
-                        # Only increment counter if the last value has not been
-                        # reached yet:
-                        if varCntSts01 < varStsStpSze:
-                            varCntSts01 = varCntSts01 + int(1)
+            # Check whether we need to crossvalidate
+            if lgcXval:
+                # We do crossvalidate. In this case, we loop through
+                # the different folds of the crossvalidation and
+                # calculate the cross-validation error for the current
+                # model for all voxel time courses.
 
-                # Only fit pRF model if variance is not zero:
-                if np.greater(aryPrfTcVar[idxX, idxY, idxSd], varZero32):
+                # Cython version:
+                if strVersion == 'cython':
 
-                    # Check whether we need to crossvalidate
-                    if lgcXval:
-                        # We do crossvalidate. In this case, we loop through
-                        # the different folds of the crossvalidation and
-                        # calculate the cross-validation error for the current
-                        # model for all voxel time courses.
+                    vecMdl = aryPrfTc[idxMdl, :]
 
-                        # Cython version:
-                        if strVersion == 'cython':
+                    # A cython function is used to loop over the folds
+                    # of the cross-validation, and within each fold to
+                    # calculate the parameter estimates of the current
+                    # model and the crossvalidation error:
+                    aryResXval = cy_lst_sq_xval(vecMdl,
+                                                aryFuncChnk,
+                                                aryIdxTrn,
+                                                aryIdxTst)
 
-                            vecMdl = aryPrfTc[idxX, idxY, idxSd, :]
+                # Numpy version:
+                elif strVersion == 'numpy':
 
-                            # A cython function is used to loop over the folds
-                            # of the cross-validation, and within each fold to
-                            # calculate the parameter estimates of the current
-                            # model and the crossvalidation error:
-                            aryResXval = cy_lst_sq_xval(vecMdl,
-                                                        aryFuncChnk,
-                                                        aryIdxTrn,
-                                                        aryIdxTst)
+                    # pre-allocate ary to collect cross-validation
+                    # error for every xval fold
+                    aryResXval = np.empty((varNumVoxChnk,
+                                           varNumXval),
+                                          dtype=np.float32)
 
-                        # Numpy version:
-                        elif strVersion == 'numpy':
+                    # loop over cross-validation folds
+                    for idxXval in range(varNumXval):
+                        # Get pRF time course models for trn and tst:
+                        vecMdlTrn = aryPrfTc[idxMdl,
+                                             aryIdxTrn[:, idxXval]]
+                        vecMdlTst = aryPrfTc[idxMdl,
+                                             aryIdxTst[:, idxXval]]
+                        # Get functional data for trn and tst:
+                        aryFuncChnkTrn = aryFuncChnk[
+                            aryIdxTrn[:, idxXval], :]
+                        aryFuncChnkTst = aryFuncChnk[
+                            aryIdxTst[:, idxXval], :]
 
-                            # pre-allocate ary to collect cross-validation
-                            # error for every xval fold
-                            aryResXval = np.empty((varNumVoxChnk,
-                                                   varNumXval),
-                                                  dtype=np.float32)
+                        # Reshape pRF time course model so it has the
+                        # required shape for np.linalg.lstsq
+                        vecMdlTrn = np.reshape(vecMdlTrn, (-1, 1))
 
-                            # loop over cross-validation folds
-                            for idxXval in range(varNumXval):
-                                # Get pRF time course models for trn and tst:
-                                vecMdlTrn = aryPrfTc[idxX, idxY, idxSd,
-                                                     aryIdxTrn[:, idxXval]]
-                                vecMdlTst = aryPrfTc[idxX, idxY, idxSd,
-                                                     aryIdxTst[:, idxXval]]
-                                # Get functional data for trn and tst:
-                                aryFuncChnkTrn = aryFuncChnk[
-                                    aryIdxTrn[:, idxXval], :]
-                                aryFuncChnkTst = aryFuncChnk[
-                                    aryIdxTst[:, idxXval], :]
+                        # Numpy linalg.lstsq is used to calculate the
+                        # parameter estimates of the current model:
+                        vecTmpPe = np.linalg.lstsq(vecMdlTrn,
+                                                   aryFuncChnkTrn,
+                                                   rcond=-1)[0]
 
-                                # Reshape pRF time course model so it has the
-                                # required shape for np.linalg.lstsq
-                                vecMdlTrn = np.reshape(vecMdlTrn, (-1, 1))
+                        # calculate model prediction time course
+                        aryMdlPrdTc = np.dot(
+                            np.reshape(vecMdlTst, (-1, 1)),
+                            np.reshape(vecTmpPe, (1, -1)))
 
-                                # Numpy linalg.lstsq is used to calculate the
-                                # parameter estimates of the current model:
-                                vecTmpPe = np.linalg.lstsq(vecMdlTrn,
-                                                           aryFuncChnkTrn,
-                                                           rcond=-1)[0]
+                        # calculate residual sum of squares between
+                        # test data and model prediction time course
+                        aryResXval[:, idxXval] = np.sum(
+                            (np.subtract(aryFuncChnkTst,
+                                         aryMdlPrdTc))**2, axis=0)
 
-                                # calculate model prediction time course
-                                aryMdlPrdTc = np.dot(
-                                    np.reshape(vecMdlTst, (-1, 1)),
-                                    np.reshape(vecTmpPe, (1, -1)))
+                # calculate the average cross validation error across
+                # all folds
+                vecTmpRes = np.mean(aryResXval, axis=1)
 
-                                # calculate residual sum of squares between
-                                # test data and model prediction time course
-                                aryResXval[:, idxXval] = np.sum(
-                                    (np.subtract(aryFuncChnkTst,
-                                                 aryMdlPrdTc))**2, axis=0)
+            else:
+                # We do not crossvalidate. In this case, we calculate
+                # the ratio of the explained variance (R squared)
+                # for the current model for all voxel time courses.
 
-                        # calculate the average cross validation error across
-                        # all folds
-                        vecTmpRes = np.mean(aryResXval, axis=1)
+                # Cython version:
+                if strVersion == 'cython':
 
-                    else:
-                        # We do not crossvalidate. In this case, we calculate
-                        # the ratio of the explained variance (R squared)
-                        # for the current model for all voxel time courses.
+                    # A cython function is used to calculate the
+                    # residuals of the current model:
+                    vecTmpRes = cy_lst_sq(
+                        aryPrfTc[idxMdl, :],
+                        aryFuncChnk)
 
-                        # Cython version:
-                        if strVersion == 'cython':
+                # Numpy version:
+                elif strVersion == 'numpy':
 
-                            # A cython function is used to calculate the
-                            # residuals of the current model:
-                            vecTmpRes = cy_lst_sq(
-                                aryPrfTc[idxX, idxY, idxSd, :],
-                                aryFuncChnk)
+                    # Reshape pRF time course model so it has the
+                    # required shape for np.linalg.lstsq
+                    vecDsgn = np.reshape(
+                        aryPrfTc[idxMdl, :], (-1, 1))
 
-                        # Numpy version:
-                        elif strVersion == 'numpy':
+                    # Numpy linalg.lstsq is used to calculate the
+                    # residuals of the current model:
+                    vecTmpRes = np.linalg.lstsq(vecDsgn, aryFuncChnk,
+                                                rcond=-1)[1]
 
-                            # Reshape pRF time course model so it has the
-                            # required shape for np.linalg.lstsq
-                            vecDsgn = np.reshape(
-                                aryPrfTc[idxX, idxY, idxSd, :], (-1, 1))
+            # Check whether current crossvalidation error (xval=True)
+            # or residuals (xval=False) are lower than previously
+            # calculated ones:
+            vecLgcTmpRes = np.less(vecTmpRes, vecBstRes)
 
-                            # Numpy linalg.lstsq is used to calculate the
-                            # residuals of the current model:
-                            vecTmpRes = np.linalg.lstsq(vecDsgn, aryFuncChnk,
-                                                        rcond=-1)[1]
+            # Replace best x and y position values, and SD values.
+            vecBstXpos[vecLgcTmpRes] = aryMdlParams[idxMdl, 0]
+            vecBstYpos[vecLgcTmpRes] = aryMdlParams[idxMdl, 1]
+            vecBstSd[vecLgcTmpRes] = aryMdlParams[idxMdl, 2]
 
-                    # Check whether current crossvalidation error (xval=True)
-                    # or residuals (xval=False) are lower than previously
-                    # calculated ones:
-                    vecLgcTmpRes = np.less(vecTmpRes, vecBstRes)
+            # Replace best residual values:
+            vecBstRes[vecLgcTmpRes] = vecTmpRes[vecLgcTmpRes]
 
-                    # Replace best x and y position values, and SD values.
-                    vecBstXpos[vecLgcTmpRes] = vecMdlXpos[idxX]
-                    vecBstYpos[vecLgcTmpRes] = vecMdlYpos[idxY]
-                    vecBstSd[vecLgcTmpRes] = vecMdlSd[idxSd]
+        # Status indicator (only used in the first of the parallel
+        # processes):
+        if idxPrc == 0:
 
-                    # Replace best residual values:
-                    vecBstRes[vecLgcTmpRes] = vecTmpRes[vecLgcTmpRes]
-
-                # Status indicator (only used in the first of the parallel
-                # processes):
-                if idxPrc == 0:
-
-                    # Increment status indicator counter:
-                    varCntSts02 = varCntSts02 + 1
+            # Increment status indicator counter:
+            varCntSts02 = varCntSts02 + 1
 
     # After finding the best fitting model for each voxel, we still have to
     # calculate the average correlation coefficient between predicted and

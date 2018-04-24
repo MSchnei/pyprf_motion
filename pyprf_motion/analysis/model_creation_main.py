@@ -18,9 +18,9 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-import nibabel as nb
 from pyprf_motion.analysis.utils_general import cls_set_config
-from pyprf_motion.analysis.model_creation_utils import (crt_mdl_rsp,
+from pyprf_motion.analysis.model_creation_utils import (crt_mdl_prms,
+                                                        crt_mdl_rsp,
                                                         crt_nrl_tc,
                                                         crt_prf_tc)
 
@@ -75,18 +75,28 @@ def model_creation(dicCnfg):
         # *********************************************************************
 
         # *********************************************************************
+        # *** Create model parameter combination, for now in pixel.
+        aryMdlParams = crt_mdl_prms((int(cfg.varVslSpcSzeX),
+                                     int(cfg.varVslSpcSzeY)), cfg.varNumX,
+                                    cfg.varExtXmin, cfg.varExtXmax,
+                                    cfg.varNumY, cfg.varExtYmin,
+                                    cfg.varExtYmax, cfg.varNumPrfSizes,
+                                    cfg.varPrfStdMin, cfg.varPrfStdMax,
+                                    mode="pix")
+
+        # *********************************************************************
+
+        # *********************************************************************
         # *** Create 2D Gauss model responses to spatial conditions.
 
         print('------Create 2D Gauss model responses to spatial conditions')
 
         aryMdlRsp = crt_mdl_rsp(arySptExpInf, (int(cfg.varVslSpcSzeX),
                                                int(cfg.varVslSpcSzeY)),
-                                cfg.varNumX, cfg.varExtXmin, cfg.varExtXmax,
-                                cfg.varNumY, cfg.varExtYmin, cfg.varExtYmax,
-                                cfg.varNumPrfSizes, cfg.varPrfStdMin,
-                                cfg.varPrfStdMax, cfg.varPar)
+                                aryMdlParams, cfg.varPar)
         del(arySptExpInf)
-        print('------Save')
+        del(aryMdlParams)
+#        print('------Save')
 #        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryMdlRsp',
 #                aryMdlRsp)
 #        print('------Done')
@@ -143,10 +153,9 @@ def model_creation(dicCnfg):
 
         # Save the 4D array as '*.npy' file:
         np.save(cfg.strPathMdl, aryPrfTc)
+        # Save the corresponding model parameters
+        np.save(cfg.strPathMdl + "_params", aryMdlParams)
 
-        # Save 4D array as '*.nii' file (for debugging purposes):
-        niiPrfTc = nb.Nifti1Image(aryPrfTc.astype('float32'), np.eye(4))
-        nb.save(niiPrfTc, cfg.strPathMdl)
         # *********************************************************************
 
     else:
@@ -166,10 +175,9 @@ def model_creation(dicCnfg):
         # Logical test for correct dimensions:
         strErrMsg = ('---Error: Dimensions of specified pRF time course ' +
                      'models do not agree with specified model parameters')
-        assert vecPrfTcShp[0] == cfg.varNumX and \
-            vecPrfTcShp[1] == cfg.varNumY and \
-            vecPrfTcShp[2] == cfg.varNumPrfSizes and \
-            vecPrfTcShp[3] == cfg.varNumVol, strErrMsg
+        assert vecPrfTcShp[0] == cfg.varNumX * \
+            cfg.varNumY * cfg.varNumPrfSizes and \
+            vecPrfTcShp[1] == cfg.varNumVol, strErrMsg
 
     # *************************************************************************
 

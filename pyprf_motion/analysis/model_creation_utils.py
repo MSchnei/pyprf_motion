@@ -24,15 +24,13 @@ from pyprf_motion.analysis.utils_general import cnvl_2D_gauss
 from pyprf_motion.analysis.utils_hrf import create_boxcar
 
 
-def crt_mdl_rsp(arySptExpInf, tplPngSize, varNumX, varExtXmin,  varExtXmax,
-                varNumY, varExtYmin, varExtYmax, varNumPrfSizes, varPrfStdMin,
-                varPrfStdMax, varPar):
-    """Create responses of 2D Gauss models to spatial conditions.
+def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
+                 varExtYmin, varExtYmax, varNumPrfSizes, varPrfStdMin,
+                 varPrfStdMax, mode="pix"):
+    """Create an array with all possible model parameter combinations
 
     Parameters
     ----------
-    arySptExpInf : 3d numpy array, shape [n_x_pix, n_y_pix, n_conditions]
-        All spatial conditions stacked along second axis.
     tplPngSize : tuple, 2
         Description of input 2.
     varNumX : float, positive
@@ -53,44 +51,54 @@ def crt_mdl_rsp(arySptExpInf, tplPngSize, varNumX, varExtXmin,  varExtXmax,
         Description of input 2.
     varPrfStdMax : float, positive
         Description of input 2.
-    varPar : float, positive
-        Description of input 2.
     Returns
     -------
-    aryMdlRsp : 4d numpy array, shape [n_x_pos, n_y_pos, n_sd, n_cond]
-        Responses of 2D Gauss models to spatial conditions.
+    aryMdlParams : 2d numpy array, shape [n_x_pos*n_y_pos*n_sd, 3]
+        Model parameters (x, y, sigma) for all models.
     Reference
     ---------
     [1]
     """
+    if mode == "deg":
+        # Vector with the moddeled x-positions of the pRFs:
+        vecX = np.linspace(varExtXmin, varExtXmax, varNumX, endpoint=True)
 
-    # Vector with the x-indicies of the positions in the super-sampled visual
-    # space at which to create pRF models.
-    vecX = np.linspace(0, (tplPngSize[0] - 1), varNumX, endpoint=True)
+        # Vector with the moddeled y-positions of the pRFs:
+        vecY = np.linspace(varExtYmin, varExtYmax, varNumY, endpoint=True)
 
-    # Vector with the y-indicies of the positions in the super-sampled visual
-    # space at which to create pRF models.
-    vecY = np.linspace(0, (tplPngSize[1] - 1), varNumY, endpoint=True)
+        # Vector with the moddeled standard deviations of the pRFs:
+        vecPrfSd = np.linspace(varPrfStdMin, varPrfStdMax, varNumPrfSizes,
+                               endpoint=True)
 
-    # We calculate the scaling factor from degrees of visual angle to pixels
-    # separately for the x- and the y-directions (the two should be the same).
-    varDgr2PixX = tplPngSize[0] / (varExtXmax - varExtXmin)
-    varDgr2PixY = tplPngSize[1] / (varExtYmax - varExtYmin)
+    elif mode == "pix":
+        # Vector with the x-indicies of the positions in the pixel space
+        # at which to create pRF models.
+        vecX = np.linspace(0, (tplPngSize[0] - 1), varNumX, endpoint=True)
 
-    # Check whether varDgr2PixX and varDgr2PixY are similar:
-    strErrMsg = 'ERROR. The ratio of X and Y dimensions in stimulus ' + \
-        'space (in degrees of visual angle) and the ratio of X and Y ' + \
-        'dimensions in the upsampled visual space do not agree'
-    assert 0.5 > np.absolute((varDgr2PixX - varDgr2PixY)), strErrMsg
+        # Vector with the y-indicies of the positions in the pixel space
+        # at which to create pRF models.
+        vecY = np.linspace(0, (tplPngSize[1] - 1), varNumY, endpoint=True)
 
-    # Vector with pRF sizes to be modelled (still in degree of visual angle):
-    vecPrfSd = np.linspace(varPrfStdMin, varPrfStdMax, varNumPrfSizes,
-                           endpoint=True)
+        # We calculate the scaling factor from degrees of visual angle to
+        # pixels separately for the x- and the y-directions (the two should be
+        # the same).
+        varDgr2PixX = tplPngSize[0] / (varExtXmax - varExtXmin)
+        varDgr2PixY = tplPngSize[1] / (varExtYmax - varExtYmin)
 
-    # We multiply the vector containing pRF sizes with the scaling factors.
-    # Now the vector with the pRF sizes can be used directly for creation of
-    # Gaussian pRF models in visual space.
-    vecPrfSd = np.multiply(vecPrfSd, varDgr2PixX)
+        # Check whether varDgr2PixX and varDgr2PixY are similar:
+        strErrMsg = 'ERROR. The ratio of X and Y dimensions in stimulus ' + \
+            'space (in degrees of visual angle) and the ratio of X and Y ' + \
+            'dimensions in the upsampled visual space do not agree'
+        assert 0.5 > np.absolute((varDgr2PixX - varDgr2PixY)), strErrMsg
+
+        # Vector with pRF sizes to be modelled (still in deg of visual angle):
+        vecPrfSd = np.linspace(varPrfStdMin, varPrfStdMax, varNumPrfSizes,
+                               endpoint=True)
+
+        # We multiply the vector containing pRF sizes with the scaling factors.
+        # Now the vector with the pRF sizes can be used directly for creation
+        # of Gaussian pRF models in visual space.
+        vecPrfSd = np.multiply(vecPrfSd, varDgr2PixX)
 
     # Number of pRF models to be created (i.e. number of possible combinations
     # of x-position, y-position, and standard deviation):
@@ -101,7 +109,7 @@ def crt_mdl_rsp(arySptExpInf, tplPngSize, varNumX, varExtXmin,  varExtXmax,
     # correspond to: (0) an index starting from zero, (1) the x-position, (2)
     # the y-position, and (3) the standard deviation. The parameters are in
     # units of the upsampled visual space.
-    aryMdlParams = np.zeros((varNumMdls, 4))
+    aryMdlParams = np.zeros((varNumMdls, 3))
 
     # Counter for parameter array:
     varCntMdlPrms = 0
@@ -119,13 +127,37 @@ def crt_mdl_rsp(arySptExpInf, tplPngSize, varNumX, varExtXmin,  varExtXmax,
             for idxSd in range(0, varNumPrfSizes):
 
                 # Place index and parameters in array:
-                aryMdlParams[varCntMdlPrms, 0] = varCntMdlPrms
-                aryMdlParams[varCntMdlPrms, 1] = vecX[idxX]
-                aryMdlParams[varCntMdlPrms, 2] = vecY[idxY]
-                aryMdlParams[varCntMdlPrms, 3] = vecPrfSd[idxSd]
+                aryMdlParams[varCntMdlPrms, 0] = vecX[idxX]
+                aryMdlParams[varCntMdlPrms, 1] = vecY[idxY]
+                aryMdlParams[varCntMdlPrms, 2] = vecPrfSd[idxSd]
 
                 # Increment parameter index:
-                varCntMdlPrms = varCntMdlPrms + 1
+                varCntMdlPrms += 1
+
+    return aryMdlParams
+
+
+def crt_mdl_rsp(arySptExpInf, tplPngSize, aryMdlParams, varPar):
+    """Create responses of 2D Gauss models to spatial conditions.
+
+    Parameters
+    ----------
+    arySptExpInf : 3d numpy array, shape [n_x_pix, n_y_pix, n_conditions]
+        All spatial conditions stacked along second axis.
+    tplPngSize : tuple, 2
+        Description of input 2.
+    aryMdlParams : 2d numpy array, shape [n_x_pos*n_y_pos*n_sd, 3]
+        Model parameters (x, y, sigma) for all models.
+    varPar : int, positive
+        Number of cores to parallelize over.
+    Returns
+    -------
+    aryMdlCndRsp : 2d numpy array, shape [n_x_pos*n_y_pos*n_sd, n_cond]
+        Responses of 2D Gauss models to spatial conditions.
+    Reference
+    ---------
+    [1]
+    """
 
     # The long array with all the combinations of model parameters is put into
     # separate chunks for parallelisation, using a list of arrays.
@@ -171,45 +203,11 @@ def crt_mdl_rsp(arySptExpInf, tplPngSize, varNumX, varExtXmin,  varExtXmax,
     for idx in range(0, varPar):
         aryMdlCndRsp = np.concatenate((aryMdlCndRsp, lstMdlTc[idx][1]), axis=0)
 
-    # check that all the models were collected correctly
-    assert aryMdlCndRsp.shape[0] == varNumMdls
-
     # Clean up:
-    del(aryMdlParams)
     del(lstMdlParams)
     del(lstMdlTc)
 
-    # Array representing model responses to cinditions together with their
-    # model parameters: aryMdlCndRsp[varNumX, varNumY, varNumPrfSizes, n_cond]
-    aryMdlRsp = np.zeros([varNumX, varNumY, varNumPrfSizes,
-                         arySptExpInf.shape[-1]])
-
-    # We use the same loop structure for organising the model responses
-    # that we used for creating the parameter array. Counter:
-    varCntMdlPrms = 0
-
-    # Put all combinations of x-position, y-position, and standard deviations
-    # into the array:
-
-    # Loop through x-positions:
-    for idxX in range(0, varNumX):
-
-        # Loop through y-positions:
-        for idxY in range(0, varNumY):
-
-            # Loop through standard deviations (of Gaussian pRF models):
-            for idxSd in range(0, varNumPrfSizes):
-
-                # Put the model responses to cond into its correct position in
-                # the 4D array, leaving out the first column (which contains
-                # the index):
-                aryMdlRsp[idxX, idxY, idxSd, :] = aryMdlCndRsp[varCntMdlPrms,
-                                                               :]
-
-                # Increment parameter index:
-                varCntMdlPrms = varCntMdlPrms + 1
-
-    return aryMdlRsp.astype('float16')
+    return aryMdlCndRsp.astype('float16')
 
 
 def crt_nrl_tc(aryMdlRsp, aryTmpExpInf, varTr, varNumVol, varTmpOvsmpl):
@@ -359,7 +357,7 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
     del(lstConv)
 
     # Reshape results:
-    tplOutShp = tplInpShp[:3] + (len(lstHrf), ) + (varNumVol, )
+    tplOutShp = tplInpShp[:-1] + (len(lstHrf), ) + (varNumVol, )
 
     # Return:
     return np.reshape(aryNrlTcConv, tplOutShp).astype('float16')
