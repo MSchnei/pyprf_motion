@@ -16,12 +16,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Number of x-positions to model:
-varNumX = 67
-# Number of y-positions to model:
-varNumY = 67
+# Number of x- or radial positions to model:
+# If strKwCrd is crt, then x-positions; elif: strKwCrd is crt radial positions
+varNum1 = 67
+# Number of y- or angular positions to model:
+# If strKwCrd is crt, then y-positions; elif: strKwCrd is crt angular positions
+varNum2 = 67
 # Number of pRF sizes to model:
 varNumPrfSizes = 40
+
+# Model parameters in cartesian or polar coordinates?
+# set either pol (polar) or crt (cartesian)
+strKwCrd = 'crt'
 
 # Extent of visual space from centre of the screen in negative x-direction
 # (i.e. from the fixation point to the left end of the screen) in degrees of

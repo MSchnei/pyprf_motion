@@ -77,12 +77,12 @@ def model_creation(dicCnfg):
         # *********************************************************************
         # *** Create model parameter combination, for now in pixel.
         aryMdlParams = crt_mdl_prms((int(cfg.varVslSpcSzeX),
-                                     int(cfg.varVslSpcSzeY)), cfg.varNumX,
+                                     int(cfg.varVslSpcSzeY)), cfg.varNum1,
                                     cfg.varExtXmin, cfg.varExtXmax,
-                                    cfg.varNumY, cfg.varExtYmin,
+                                    cfg.varNum2, cfg.varExtYmin,
                                     cfg.varExtYmax, cfg.varNumPrfSizes,
                                     cfg.varPrfStdMin, cfg.varPrfStdMax,
-                                    kwUnt="pix", kwCrd="crt")
+                                    kwUnt='pix', kwCrd=cfg.strKwCrd)
 
         # *********************************************************************
 
@@ -175,8 +175,8 @@ def model_creation(dicCnfg):
         # Logical test for correct dimensions:
         strErrMsg = ('---Error: Dimensions of specified pRF time course ' +
                      'models do not agree with specified model parameters')
-        assert vecPrfTcShp[0] == cfg.varNumX * \
-            cfg.varNumY * cfg.varNumPrfSizes and \
+        assert vecPrfTcShp[0] == cfg.varNum1 * \
+            cfg.varNum2 * cfg.varNumPrfSizes and \
             vecPrfTcShp[1] == cfg.varNumVol, strErrMsg
 
     # *************************************************************************

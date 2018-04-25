@@ -38,7 +38,7 @@ def rmp_deg_pixel_x_y_s(vecX, vecY, vecPrfSd, tplPngSize,
     vecPrfSd : 1D numpy array
         Array with possible sd parametrs in degree
     tplPngSize : tuple, 2
-        Pixel dimensions of the visual space (width, height).
+        Pixel dimensions of the visual space in pixel (width, height).
     varExtXmin : float
         Extent of visual space from centre in negative x-direction (width)
     varExtXmax : float
@@ -81,22 +81,22 @@ def rmp_deg_pixel_x_y_s(vecX, vecY, vecPrfSd, tplPngSize,
     return vecXpxl, vecYpxl, vecPrfSdpxl
 
 
-def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
+def crt_mdl_prms(tplPngSize, varNum1, varExtXmin,  varExtXmax, varNum2,
                  varExtYmin, varExtYmax, varNumPrfSizes, varPrfStdMin,
-                 varPrfStdMax, kwUnt="pix", kwCrd="crt"):
+                 varPrfStdMax, kwUnt='pix', kwCrd='crt'):
     """Create an array with all possible model parameter combinations
 
     Parameters
     ----------
     tplPngSize : tuple, 2
         Pixel dimensions of the visual space (width, height).
-    varNumX : int, positive
+    varNum1 : int, positive
         Number of x-positions to model
     varExtXmin : float
         Extent of visual space from centre in negative x-direction (width)
     varExtXmax : float
         Extent of visual space from centre in positive x-direction (width)
-    varNumY : float, positive
+    varNum2 : float, positive
         Number of y-positions to model.
     varExtYmin : int
         Extent of visual space from centre in negative y-direction (height)
@@ -125,7 +125,7 @@ def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
 
     # Number of pRF models to be created (i.e. number of possible
     # combinations of x-position, y-position, and standard deviation):
-    varNumMdls = varNumX * varNumY * varNumPrfSizes
+    varNumMdls = varNum1 * varNum2 * varNumPrfSizes
 
     # Array for the x-position, y-position, and standard deviations for
     # which pRF model time courses are going to be created, where the
@@ -137,26 +137,26 @@ def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
     # Counter for parameter array:
     varCntMdlPrms = 0
 
-    if kwCrd == "crt":
+    if kwCrd == 'crt':
 
         # Vector with the moddeled x-positions of the pRFs:
-        vecX = np.linspace(varExtXmin, varExtXmax, varNumX, endpoint=True)
+        vecX = np.linspace(varExtXmin, varExtXmax, varNum1, endpoint=True)
 
         # Vector with the moddeled y-positions of the pRFs:
-        vecY = np.linspace(varExtYmin, varExtYmax, varNumY, endpoint=True)
+        vecY = np.linspace(varExtYmin, varExtYmax, varNum2, endpoint=True)
 
         # Vector with standard deviations pRF models (in degree of vis angle):
         vecPrfSd = np.linspace(varPrfStdMin, varPrfStdMax, varNumPrfSizes,
                                endpoint=True)
 
-        if kwUnt == "deg":
+        if kwUnt == 'deg':
             # since parameters are already in degrees of visual angle,
             # we do nothing
             pass
 
-        elif kwUnt == "pix":
+        elif kwUnt == 'pix':
             # convert parameters to pixels
-            vecX, vexY, vecPrfSd = rmp_deg_pixel_x_y_s(vecX, vecY, vecPrfSd,
+            vecX, vecY, vecPrfSd = rmp_deg_pixel_x_y_s(vecX, vecY, vecPrfSd,
                                                        tplPngSize, varExtXmin,
                                                        varExtXmax, varExtYmin,
                                                        varExtYmax)
@@ -169,10 +169,10 @@ def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
         # deviations into the array:
 
         # Loop through x-positions:
-        for idxX in range(0, varNumX):
+        for idxX in range(0, varNum1):
 
             # Loop through y-positions:
-            for idxY in range(0, varNumY):
+            for idxY in range(0, varNum2):
 
                 # Loop through standard deviations (of Gaussian pRF models):
                 for idxSd in range(0, varNumPrfSizes):
@@ -185,13 +185,13 @@ def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
                     # Increment parameter index:
                     varCntMdlPrms += 1
 
-    elif kwCrd == "pol":
+    elif kwCrd == 'pol':
 
         # Vector with the radial position:
-        vecRad = np.linspace(0.0, varExtXmax, varNumX, endpoint=True)
+        vecRad = np.linspace(0.0, varExtXmax, varNum1, endpoint=True)
 
         # Vector with the angular position:
-        vecTht = np.linspace(0.0, 2*np.pi, varNumY, endpoint=True)
+        vecTht = np.linspace(0.0, 2*np.pi, varNum2, endpoint=True)
 
         # get all possible combinations on the grid, using matrix indexing ij
         # of output
@@ -208,14 +208,14 @@ def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
         vecPrfSd = np.linspace(varPrfStdMin, varPrfStdMax, varNumPrfSizes,
                                endpoint=True)
 
-        if kwUnt == "deg":
+        if kwUnt == 'deg':
             # since parameters are already in degrees of visual angle,
             # we do nothing
             pass
 
-        elif kwUnt == "pix":
+        elif kwUnt == 'pix':
             # convert parameters to pixels
-            vecX, vexY, vecPrfSd = rmp_deg_pixel_x_y_s(vecX, vecY, vecPrfSd,
+            vecX, vecY, vecPrfSd = rmp_deg_pixel_x_y_s(vecX, vecY, vecPrfSd,
                                                        tplPngSize, varExtXmin,
                                                        varExtXmax, varExtYmin,
                                                        varExtYmax)
@@ -224,7 +224,7 @@ def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
         # deviations into the array:
 
         # Loop through x-positions:
-        for idxXY in range(0, varNumX*varNumY):
+        for idxXY in range(0, varNum1*varNum2):
 
             # Loop through standard deviations (of Gaussian pRF models):
             for idxSd in range(0, varNumPrfSizes):

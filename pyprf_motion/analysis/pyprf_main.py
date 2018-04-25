@@ -118,11 +118,12 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     # Get array with all possible model parameter combination:
     # [x positions, y positions, sigmas]
     aryMdlParams = crt_mdl_prms((int(cfg.varVslSpcSzeX),
-                                 int(cfg.varVslSpcSzeY)), cfg.varNumX,
-                                cfg.varExtXmin, cfg.varExtXmax, cfg.varNumY,
+                                 int(cfg.varVslSpcSzeY)), cfg.varNum1,
+                                cfg.varExtXmin, cfg.varExtXmax, cfg.varNum2,
                                 cfg.varExtYmin, cfg.varExtYmax,
                                 cfg.varNumPrfSizes, cfg.varPrfStdMin,
-                                cfg.varPrfStdMax, kwUnt="deg", kwCrd="crt")
+                                cfg.varPrfStdMax, kwUnt='deg',
+                                kwCrd=cfg.strKwCrd)
 
     # Empty list for results (parameters of best fitting pRF model):
     lstPrfRes = [None] * cfg.varPar

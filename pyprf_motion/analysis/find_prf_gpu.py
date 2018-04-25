@@ -108,9 +108,9 @@ def find_prf_gpu(idxPrc, vecMdlXpos, vecMdlYpos, vecMdlSd, aryFunc,  #noqa
     print('------Prepare pRF model time courses for graph')
 
     # Number of modelled x-positions in the visual space:
-    varNumX = aryPrfTc.shape[0]
+    varNum1 = aryPrfTc.shape[0]
     # Number of modelled y-positions in the visual space:
-    varNumY = aryPrfTc.shape[1]
+    varNum2 = aryPrfTc.shape[1]
     # Number of modelled pRF sizes:
     varNumPrfSizes = aryPrfTc.shape[2]
 
@@ -501,24 +501,24 @@ def find_prf_gpu(idxPrc, vecMdlXpos, vecMdlYpos, vecMdlSd, aryFunc,  #noqa
     vecMdlSd = vecMdlSd.astype(np.float32)
 
     # The first column is to contain model x positions:
-    aryMdl[:, 0] = np.repeat(vecMdlXpos, int(varNumY * varNumPrfSizes))
+    aryMdl[:, 0] = np.repeat(vecMdlXpos, int(varNum2 * varNumPrfSizes))
 
     # The second column is to contain model y positions:
     aryMdl[:, 1] = np.repeat(
                              np.tile(vecMdlYpos,
-                                     varNumX),
+                                     varNum1),
                              varNumPrfSizes
                              )
 
     # The third column is to contain model pRF sizes:
-    aryMdl[:, 2] = np.tile(vecMdlSd, int(varNumX * varNumY))
+    aryMdl[:, 2] = np.tile(vecMdlSd, int(varNum1 * varNum2))
 
     # The above code has the same result as the below (for better readability):
     # aryMdl = np.zeros((varNumMdls, 3), dtype=np.float32)
     # varCount = 0
     # # Loop through pRF models:
-    # for idxX in range(0, varNumX):
-    #     for idxY in range(0, varNumY):
+    # for idxX in range(0, varNum1):
+    #     for idxY in range(0, varNum2):
     #         for idxSd in range(0, varNumPrfSizes):
     #             aryMdl[varCount, 0] = vecMdlXpos[idxX]
     #             aryMdl[varCount, 1] = vecMdlYpos[idxY]

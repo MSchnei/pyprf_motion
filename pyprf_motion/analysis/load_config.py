@@ -64,15 +64,29 @@ def load_config(strCsvCnfg, lgcTest=False):  #noqa
                 # Put paramter name (key) and value (item) into dictionary:
                 dicCnfg[strParamKey] = strParamVlu
 
-    # Number of x-positions to model:
-    dicCnfg['varNumX'] = int(dicCnfg['varNumX'])
+    # Are model parameters in cartesian or polar coordinates?
+    # set either pol (polar) or crt (cartesian)
+    dicCnfg['strKwCrd'] = ast.literal_eval(dicCnfg['strKwCrd'])
     if lgcPrint:
-        print('---Number of x-positions to model: ' + str(dicCnfg['varNumX']))
+        print('---Model coordinates are in: ' + str(dicCnfg['strKwCrd']))
 
-    # Number of y-positions to model:
-    dicCnfg['varNumY'] = int(dicCnfg['varNumY'])
+    # Number of x- or radial positions to model:
+    dicCnfg['varNum1'] = int(dicCnfg['varNum1'])
+    # Number of y- or angular positions to model:
+    dicCnfg['varNum2'] = int(dicCnfg['varNum2'])
+
     if lgcPrint:
-        print('---Number of y-positions to model: ' + str(dicCnfg['varNumY']))
+        if dicCnfg['strKwCrd'] == 'crt':
+            print('---Number of x-positions to model: ' +
+                  str(dicCnfg['varNum1']))
+            print('---Number of y-positions to model: ' +
+                  str(dicCnfg['varNum2']))
+
+        elif dicCnfg['strKwCrd'] == 'pol':
+            print('---Number of radial positions to model: ' +
+                  str(dicCnfg['varNum1']))
+            print('---Number of angular positions to model: ' +
+                  str(dicCnfg['varNum2']))
 
     # Number of pRF sizes to model:
     dicCnfg['varNumPrfSizes'] = int(dicCnfg['varNumPrfSizes'])
