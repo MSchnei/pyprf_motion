@@ -122,7 +122,7 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
                                 cfg.varExtXmin, cfg.varExtXmax, cfg.varNumY,
                                 cfg.varExtYmin, cfg.varExtYmax,
                                 cfg.varNumPrfSizes, cfg.varPrfStdMin,
-                                cfg.varPrfStdMax, kwUnt="deg")
+                                cfg.varPrfStdMax, kwUnt="deg", kwCrd="crt")
 
     # Empty list for results (parameters of best fitting pRF model):
     lstPrfRes = [None] * cfg.varPar

@@ -82,7 +82,7 @@ def model_creation(dicCnfg):
                                     cfg.varNumY, cfg.varExtYmin,
                                     cfg.varExtYmax, cfg.varNumPrfSizes,
                                     cfg.varPrfStdMin, cfg.varPrfStdMax,
-                                    kwUnt="pix")
+                                    kwUnt="pix", kwCrd="crt")
 
         # *********************************************************************
 
