@@ -83,9 +83,11 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
     varNumVoxChnk = aryFuncChnk.shape[0]
 
     # Vectors for pRF finding results [number-of-voxels times one]:
-    vecBstXpos = np.zeros(varNumVoxChnk)
-    vecBstYpos = np.zeros(varNumVoxChnk)
-    vecBstSd = np.zeros(varNumVoxChnk)
+    # make sure they have the same precision as aryMdlParams, since this
+    # is important for later comparison
+    vecBstXpos = np.zeros(varNumVoxChnk, dtype=aryMdlParams.dtype)
+    vecBstYpos = np.zeros(varNumVoxChnk, dtype=aryMdlParams.dtype)
+    vecBstSd = np.zeros(varNumVoxChnk, dtype=aryMdlParams.dtype)
     # vecBstR2 = np.zeros(varNumVoxChnk)
 
     # Vector for best R-square value. For each model fit, the R-square value is
@@ -93,8 +95,10 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
     # solution so far. We initialise with an arbitrary, high value
     vecBstRes = np.add(np.zeros(varNumVoxChnk), np.inf).astype(np.float32)
 
-    # Vector that will hold the temporary residuals from the model fitting:
-    # vecTmpRes = np.zeros(varNumVoxChnk).astype(np.float32)
+    # In case we cross-validate we also save and replace the best
+    # residual values for every fold (not only mean across folds):
+    if lgcXval:
+        aryBstResFlds = np.zeros((varNumVoxChnk, varNumXval), dtype=np.float32)
 
     # We reshape the voxel time courses, so that time goes down the column,
     # i.e. from top to bottom.
@@ -291,8 +295,12 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
             vecBstYpos[vecLgcTmpRes] = aryMdlParams[idxMdl, 1]
             vecBstSd[vecLgcTmpRes] = aryMdlParams[idxMdl, 2]
 
-            # Replace best residual values:
+            # Replace best mean residual values:
             vecBstRes[vecLgcTmpRes] = vecTmpRes[vecLgcTmpRes]
+            # In case we cross-validate we also save and replace the best
+            # residual values for every fold (not only mean across folds):
+            if lgcXval:
+                aryBstResFlds[vecLgcTmpRes, :] = aryResXval[vecLgcTmpRes, :]
 
         # Status indicator (only used in the first of the parallel
         # processes):
@@ -307,9 +315,54 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
     # (xval=False) for each voxel.
 
     if lgcXval:
-        # Still needs to be implemented
-        # For now return the average prediction error
-        vecBstR2 = vecBstRes
+        # Since we did not do this during finding the best model, we still need
+        # to calculate deviation from a mean model for every voxel and fold
+        # arySsTotXval
+
+        # concatenate vectors with best x, y, sigma params
+        aryBstPrm = np.stack((vecBstXpos, vecBstYpos, vecBstSd), axis=1)
+        # find unique rows
+        vecUnqIdx = np.ascontiguousarray(aryBstPrm).view(
+            np.dtype((np.void, aryBstPrm.dtype.itemsize * aryBstPrm.shape[1])))
+        _, vecUnqIdx = np.unique(vecUnqIdx, return_index=True)
+        # get rows with all best-fitting model parameter combinations found
+        aryUnqRows = aryBstPrm[vecUnqIdx]
+        # loop over all best-fitting model parameter combinations found
+        for vecPrm in aryUnqRows:
+#            # get logical for the prf time course for this model combination
+#            lgcPrftc = np.isclose(aryMdlParams, vecPrm, atol=1e-04).all(axis=1)
+#            # get model time course and make sure it is always one dimensional
+#            vecMdl = np.squeeze(aryPrfTc[lgcPrftc, :])
+            # get logical for voxels for which this prm combi was the best
+            lgcVxl = np.isclose(aryBstPrm, vecPrm, atol=1e-04).all(axis=1)
+            # get voxel time course
+            aryVxlTc = aryFuncChnk[:, lgcVxl]
+
+            # calculate deviation from a mean model for every voxel and fold
+            arySsTotXval = np.empty((aryResXval.shape), dtype=np.float32)
+            # loop over cross-validation folds
+            for idxXval in range(varNumXval):
+                # Get functional data for tst:
+                aryFuncChnkTst = aryVxlTc[
+                    aryIdxTst[:, idxXval], :]
+
+                # Deviation from the mean for each datapoint:
+                aryFuncDev = np.subtract(aryFuncChnkTst,
+                                         np.mean(aryFuncChnkTst,
+                                                 axis=0)[None, :])
+                # Sum of squares:
+                vecSsTot = np.sum(np.power(aryFuncDev,
+                                           2.0),
+                                  axis=0)
+                arySsTotXval[lgcVxl, idxXval] = vecSsTot
+
+        # Calculate coefficient of determination by comparing:
+        # aryBstResFlds vs. arySsTotXval
+        # Note that we take the mean across folds here
+        vecBstR2 = np.subtract(1.0,
+                               np.mean(np.divide(aryBstResFlds,
+                                                 arySsTotXval),
+                                       axis=1))
 
     else:
         # To calculate the coefficient of determination, we start with the
