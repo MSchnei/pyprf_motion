@@ -31,10 +31,11 @@ import multiprocessing as mp
 from pyprf_motion.analysis.load_config import load_config
 from pyprf_motion.analysis.utils_general import cls_set_config
 from pyprf_motion.analysis.model_creation_main import model_creation
+from pyprf_motion.analysis.model_creation_utils import crt_mdl_prms
 from pyprf_motion.analysis.prepare import prep_models, prep_func
 
 ###### DEBUGGING ###############
-#strCsvCnfg = "/home/marian/Documents/Testing/pyprf_motion_xval/test_config_cython_xval.csv"
+#strCsvCnfg = "/home/marian/Documents/Testing/pyprf_motion_xval/test_model_creation.csv"
 #lgcTest = False
 ################################
 
@@ -114,23 +115,14 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     if cfg.strVersion == 'gpu':
         cfg.varPar = 1
 
-    # Vector with the moddeled x-positions of the pRFs:
-    vecMdlXpos = np.linspace(cfg.varExtXmin,
-                             cfg.varExtXmax,
-                             cfg.varNumX,
-                             endpoint=True)
-
-    # Vector with the moddeled y-positions of the pRFs:
-    vecMdlYpos = np.linspace(cfg.varExtYmin,
-                             cfg.varExtYmax,
-                             cfg.varNumY,
-                             endpoint=True)
-
-    # Vector with the moddeled standard deviations of the pRFs:
-    vecMdlSd = np.linspace(cfg.varPrfStdMin,
-                           cfg.varPrfStdMax,
-                           cfg.varNumPrfSizes,
-                           endpoint=True)
+    # Get array with all possible model parameter combination:
+    # [x positions, y positions, sigmas]
+    aryMdlParams = crt_mdl_prms((int(cfg.varVslSpcSzeX),
+                                 int(cfg.varVslSpcSzeY)), cfg.varNumX,
+                                cfg.varExtXmin, cfg.varExtXmax, cfg.varNumY,
+                                cfg.varExtYmin, cfg.varExtYmax,
+                                cfg.varNumPrfSizes, cfg.varPrfStdMin,
+                                cfg.varPrfStdMax, mode="deg")
 
     # Empty list for results (parameters of best fitting pRF model):
     lstPrfRes = [None] * cfg.varPar
@@ -167,12 +159,9 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
         for idxPrc in range(0, cfg.varPar):
             lstPrcs[idxPrc] = mp.Process(target=find_prf_cpu,
                                          args=(idxPrc,
-                                               dicCnfg,
-                                               vecMdlXpos,
-                                               vecMdlYpos,
-                                               vecMdlSd,
                                                lstFunc[idxPrc],
                                                aryPrfTc,
+                                               aryMdlParams,
                                                cfg.strVersion,
                                                cfg.lgcXval,
                                                cfg.varNumXval,
@@ -190,9 +179,7 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
         for idxPrc in range(0, cfg.varPar):
             lstPrcs[idxPrc] = mp.Process(target=find_prf_gpu,
                                          args=(idxPrc,
-                                               vecMdlXpos,
-                                               vecMdlYpos,
-                                               vecMdlSd,
+                                               aryMdlParams,
                                                lstFunc[idxPrc],
                                                aryPrfTc,
                                                queOut)

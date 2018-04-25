@@ -177,9 +177,9 @@ def cnvl_2D_gauss(idxPrc, aryMdlParamsChnk, arySptExpInf, tplPngSize, queOut):
     for idxMdl in range(0, varChnkSze):
 
         # Spatial parameters of current model:
-        varTmpX = aryMdlParamsChnk[idxMdl, 1]
-        varTmpY = aryMdlParamsChnk[idxMdl, 2]
-        varTmpSd = aryMdlParamsChnk[idxMdl, 3]
+        varTmpX = aryMdlParamsChnk[idxMdl, 0]
+        varTmpY = aryMdlParamsChnk[idxMdl, 1]
+        varTmpSd = aryMdlParamsChnk[idxMdl, 2]
 
         # Create pRF model (2D):
         aryGauss = crt_2D_gauss(tplPngSize[0],
