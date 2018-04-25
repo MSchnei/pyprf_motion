@@ -315,6 +315,8 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
     # (xval=False) for each voxel.
 
     if lgcXval:
+        print('------------Process ' + str(idxPrc) + ', Calculate R2')
+
         # Since we did not do this during finding the best model, we still need
         # to calculate deviation from a mean model for every voxel and fold
         # arySsTotXval
@@ -327,6 +329,9 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
         _, vecUnqIdx = np.unique(vecUnqIdx, return_index=True)
         # get rows with all best-fitting model parameter combinations found
         aryUnqRows = aryBstPrm[vecUnqIdx]
+
+        # calculate deviation from a mean model for every voxel and fold
+        arySsTotXval = np.empty((aryBstResFlds.shape), dtype=np.float32)
         # loop over all best-fitting model parameter combinations found
         for vecPrm in aryUnqRows:
 #            # get logical for the prf time course for this model combination
@@ -337,15 +342,11 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
             lgcVxl = np.isclose(aryBstPrm, vecPrm, atol=1e-04).all(axis=1)
             # get voxel time course
             aryVxlTc = aryFuncChnk[:, lgcVxl]
-
-            # calculate deviation from a mean model for every voxel and fold
-            arySsTotXval = np.empty((aryResXval.shape), dtype=np.float32)
             # loop over cross-validation folds
             for idxXval in range(varNumXval):
                 # Get functional data for tst:
                 aryFuncChnkTst = aryVxlTc[
                     aryIdxTst[:, idxXval], :]
-
                 # Deviation from the mean for each datapoint:
                 aryFuncDev = np.subtract(aryFuncChnkTst,
                                          np.mean(aryFuncChnkTst,
@@ -370,9 +371,9 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
         # The mean of each time course:
         vecFuncMean = np.mean(aryFuncChnk, axis=0)
         # Deviation from the mean for each datapoint:
-        vecFuncDev = np.subtract(aryFuncChnk, vecFuncMean[None, :])
+        aryFuncDev = np.subtract(aryFuncChnk, vecFuncMean[None, :])
         # Sum of squares:
-        vecSsTot = np.sum(np.power(vecFuncDev,
+        vecSsTot = np.sum(np.power(aryFuncDev,
                                    2.0),
                           axis=0)
         # Coefficient of determination:
