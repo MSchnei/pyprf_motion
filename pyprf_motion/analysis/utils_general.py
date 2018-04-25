@@ -102,6 +102,82 @@ def load_nii(strPathIn, varSzeThr=5000.0):
     return aryNii, objHdr, aryAff
 
 
+def map_crt_to_pol(aryXCrds, aryYrds):
+    """Remap coordinates from cartesian to polar
+
+    Parameters
+    ----------
+    aryXCrds : 1D numpy array
+        Array with x coordinate values.
+    aryYrds : 1D numpy array
+        Array with y coordinate values.
+
+    Returns
+    -------
+    aryTht : 1D numpy array
+        Angle of coordinates
+    aryRad : 1D numpy array
+        Radius of coordinates.
+    """
+
+    aryRad = np.sqrt(aryXCrds**2+aryYrds**2)
+    aryTht = np.arctan2(aryYrds, aryXCrds)
+
+    return aryTht, aryRad
+
+
+def map_pol_to_crt(aryTht, aryRad):
+    """Remap coordinates from polar to cartesian
+
+    Parameters
+    ----------
+    aryTht : 1D numpy array
+        Angle of coordinates
+    aryRad : 1D numpy array
+        Radius of coordinates.
+
+    Returns
+    -------
+    aryXCrds : 1D numpy array
+        Array with x coordinate values.
+    aryYrds : 1D numpy array
+        Array with y coordinate values.
+    """
+
+    aryXCrds = aryRad * np.cos(aryTht)
+    aryYrds = aryRad * np.sin(aryTht)
+
+    return aryXCrds, aryYrds
+
+
+def rmp_rng(aryVls, varNewMin, varNewMax):
+    """Remap values in an array from
+
+    Parameters
+    ----------
+    aryVls : 1D numpy array
+        Array with values that need to be remapped.
+    varNewMin : float
+        Desired minimum value of new, remapped array.
+    varNewMax : float
+        Desired maximum value of new, remapped array.
+
+    Returns
+    -------
+    aryVls : 1D numpy array
+        Array with remapped values.
+    """
+
+    varOldMin = aryVls.min()
+    varOldMax = aryVls.max()
+    aryNewVls = np.empty((aryVls.shape), dtype=aryVls.dtype)
+    for ind, val in enumerate(aryVls):
+        aryNewVls[ind] = (((val - varOldMin) * (varNewMax - varNewMin)) /
+                          (varOldMax - varOldMin)) + varNewMin
+
+    return aryNewVls
+
+
 def crt_2D_gauss(varSizeX, varSizeY, varPosX, varPosY, varSd):
     """Create 2D Gaussian kernel.
 

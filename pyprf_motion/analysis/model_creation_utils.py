@@ -20,8 +20,65 @@
 import numpy as np
 import multiprocessing as mp
 from pyprf_motion.analysis.utils_hrf import spmt, dspmt, ddspmt, cnvl_tc
-from pyprf_motion.analysis.utils_general import cnvl_2D_gauss
+from pyprf_motion.analysis.utils_general import (rmp_rng, map_pol_to_crt,
+                                                 cnvl_2D_gauss)
 from pyprf_motion.analysis.utils_hrf import create_boxcar
+
+
+def rmp_deg_pixel_x_y_s(vecX, vecY, vecPrfSd, tplPngSize,
+                        varExtXmin, varExtXmax, varExtYmin, varExtYmax):
+    """Remap x, y, sigma parameters from degrees to pixel.
+
+    Parameters
+    ----------
+    vecX : 1D numpy array
+        Array with possible x parametrs in degree
+    vecY : 1D numpy array
+        Array with possible y parametrs in degree
+    vecPrfSd : 1D numpy array
+        Array with possible sd parametrs in degree
+    tplPngSize : tuple, 2
+        Pixel dimensions of the visual space (width, height).
+    varExtXmin : float
+        Extent of visual space from centre in negative x-direction (width)
+    varExtXmax : float
+        Extent of visual space from centre in positive x-direction (width)
+    varExtYmin : int
+        Extent of visual space from centre in negative y-direction (height)
+    varExtYmax : float
+        Extent of visual space from centre in positive y-direction (height)
+    Returns
+    -------
+    vecX : 1D numpy array
+        Array with possible x parametrs in pixel
+    vecY : 1D numpy array
+        Array with possible y parametrs in pixel
+    vecPrfSd : 1D numpy array
+        Array with possible sd parametrs in pixel
+    """
+    # Remap moddeled x-positions of the pRFs:
+    vecXpxl = rmp_rng(vecX, 0.0, (tplPngSize[0] - 1))
+
+    # Remap moddeled y-positions of the pRFs:
+    vecYpxl = rmp_rng(vecY, 0.0, (tplPngSize[1] - 1))
+
+    # We calculate the scaling factor from degrees of visual angle to
+    # pixels separately for the x- and the y-directions (the two should
+    # be the same).
+    varDgr2PixX = tplPngSize[0] / (varExtXmax - varExtXmin)
+    varDgr2PixY = tplPngSize[1] / (varExtYmax - varExtYmin)
+
+    # Check whether varDgr2PixX and varDgr2PixY are similar:
+    strErrMsg = 'ERROR. The ratio of X and Y dimensions in ' + \
+        'stimulus space (in degrees of visual angle) and the ' + \
+        'ratio of X and Y dimensions in the upsampled visual space' + \
+        'do not agree'
+    assert 0.5 > np.absolute((varDgr2PixX - varDgr2PixY)), strErrMsg
+
+    # Convert prf sizes from degrees of visual angles to pixel
+    vecPrfSdpxl = np.multiply(vecPrfSd, varDgr2PixX)
+
+    return vecXpxl, vecYpxl, vecPrfSdpxl
 
 
 def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
@@ -66,80 +123,123 @@ def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
     [1]
     """
 
-    if kwUnt == "deg":
+    # Number of pRF models to be created (i.e. number of possible
+    # combinations of x-position, y-position, and standard deviation):
+    varNumMdls = varNumX * varNumY * varNumPrfSizes
+
+    # Array for the x-position, y-position, and standard deviations for
+    # which pRF model time courses are going to be created, where the
+    # columns correspond to: (1) the x-position, (2) the y-position, and
+    # (3) the standard deviation. The parameters are in units of the
+    # upsampled visual space.
+    aryMdlParams = np.zeros((varNumMdls, 3))
+
+    # Counter for parameter array:
+    varCntMdlPrms = 0
+
+    if kwCrd == "crt":
+
         # Vector with the moddeled x-positions of the pRFs:
         vecX = np.linspace(varExtXmin, varExtXmax, varNumX, endpoint=True)
 
         # Vector with the moddeled y-positions of the pRFs:
         vecY = np.linspace(varExtYmin, varExtYmax, varNumY, endpoint=True)
 
-        # Vector with the moddeled standard deviations of the pRFs:
+        # Vector with standard deviations pRF models (in degree of vis angle):
         vecPrfSd = np.linspace(varPrfStdMin, varPrfStdMax, varNumPrfSizes,
                                endpoint=True)
 
-    elif kwUnt == "pix":
-        # Vector with the x-indicies of the positions in the pixel space
-        # at which to create pRF models.
-        vecX = np.linspace(0, (tplPngSize[0] - 1), varNumX, endpoint=True)
+        if kwUnt == "deg":
+            # since parameters are already in degrees of visual angle,
+            # we do nothing
+            pass
 
-        # Vector with the y-indicies of the positions in the pixel space
-        # at which to create pRF models.
-        vecY = np.linspace(0, (tplPngSize[1] - 1), varNumY, endpoint=True)
+        elif kwUnt == "pix":
+            # convert parameters to pixels
+            vecX, vexY, vecPrfSd = rmp_deg_pixel_x_y_s(vecX, vecY, vecPrfSd,
+                                                       tplPngSize, varExtXmin,
+                                                       varExtXmax, varExtYmin,
+                                                       varExtYmax)
 
-        # We calculate the scaling factor from degrees of visual angle to
-        # pixels separately for the x- and the y-directions (the two should be
-        # the same).
-        varDgr2PixX = tplPngSize[0] / (varExtXmax - varExtXmin)
-        varDgr2PixY = tplPngSize[1] / (varExtYmax - varExtYmin)
+        else:
+            print('Unknown keyword provided for possible model parameter ' +
+                  'combinations: should be either pix or deg')
 
-        # Check whether varDgr2PixX and varDgr2PixY are similar:
-        strErrMsg = 'ERROR. The ratio of X and Y dimensions in stimulus ' + \
-            'space (in degrees of visual angle) and the ratio of X and Y ' + \
-            'dimensions in the upsampled visual space do not agree'
-        assert 0.5 > np.absolute((varDgr2PixX - varDgr2PixY)), strErrMsg
+        # Put all combinations of x-position, y-position, and standard
+        # deviations into the array:
 
-        # Vector with pRF sizes to be modelled (still in deg of visual angle):
+        # Loop through x-positions:
+        for idxX in range(0, varNumX):
+
+            # Loop through y-positions:
+            for idxY in range(0, varNumY):
+
+                # Loop through standard deviations (of Gaussian pRF models):
+                for idxSd in range(0, varNumPrfSizes):
+
+                    # Place index and parameters in array:
+                    aryMdlParams[varCntMdlPrms, 0] = vecX[idxX]
+                    aryMdlParams[varCntMdlPrms, 1] = vecY[idxY]
+                    aryMdlParams[varCntMdlPrms, 2] = vecPrfSd[idxSd]
+
+                    # Increment parameter index:
+                    varCntMdlPrms += 1
+
+    elif kwCrd == "pol":
+
+        # Vector with the radial position:
+        vecRad = np.linspace(0.0, varExtXmax, varNumX, endpoint=True)
+
+        # Vector with the angular position:
+        vecTht = np.linspace(0.0, 2*np.pi, varNumY, endpoint=True)
+
+        # get all possible combinations on the grid, using matrix indexing ij
+        # of output
+        aryRad, aryTht = np.meshgrid(vecRad, vecTht, indexing='ij')
+
+        # faltten arrays to be able to combine them with meshgrid
+        vecRad = aryRad.flatten()
+        vecTht = aryTht.flatten()
+
+        # convert from polar to cartesian
+        vecX, vecY = map_pol_to_crt(vecTht, vecRad)
+
+        # Vector with standard deviations pRF models (in degree of vis angle):
         vecPrfSd = np.linspace(varPrfStdMin, varPrfStdMax, varNumPrfSizes,
                                endpoint=True)
 
-        # We multiply the vector containing pRF sizes with the scaling factors.
-        # Now the vector with the pRF sizes can be used directly for creation
-        # of Gaussian pRF models in visual space.
-        vecPrfSd = np.multiply(vecPrfSd, varDgr2PixX)
+        if kwUnt == "deg":
+            # since parameters are already in degrees of visual angle,
+            # we do nothing
+            pass
 
-    # Number of pRF models to be created (i.e. number of possible combinations
-    # of x-position, y-position, and standard deviation):
-    varNumMdls = varNumX * varNumY * varNumPrfSizes
+        elif kwUnt == "pix":
+            # convert parameters to pixels
+            vecX, vexY, vecPrfSd = rmp_deg_pixel_x_y_s(vecX, vecY, vecPrfSd,
+                                                       tplPngSize, varExtXmin,
+                                                       varExtXmax, varExtYmin,
+                                                       varExtYmax)
 
-    # Array for the x-position, y-position, and standard deviations for which
-    # pRF model time courses are going to be created, where the columns
-    # correspond to: (0) an index starting from zero, (1) the x-position, (2)
-    # the y-position, and (3) the standard deviation. The parameters are in
-    # units of the upsampled visual space.
-    aryMdlParams = np.zeros((varNumMdls, 3))
+        # Put all combinations of x-position, y-position, and standard
+        # deviations into the array:
 
-    # Counter for parameter array:
-    varCntMdlPrms = 0
-
-    # Put all combinations of x-position, y-position, and standard deviations
-    # into the array:
-
-    # Loop through x-positions:
-    for idxX in range(0, varNumX):
-
-        # Loop through y-positions:
-        for idxY in range(0, varNumY):
+        # Loop through x-positions:
+        for idxXY in range(0, varNumX*varNumY):
 
             # Loop through standard deviations (of Gaussian pRF models):
             for idxSd in range(0, varNumPrfSizes):
 
                 # Place index and parameters in array:
-                aryMdlParams[varCntMdlPrms, 0] = vecX[idxX]
-                aryMdlParams[varCntMdlPrms, 1] = vecY[idxY]
+                aryMdlParams[varCntMdlPrms, 0] = vecX[idxXY]
+                aryMdlParams[varCntMdlPrms, 1] = vecY[idxXY]
                 aryMdlParams[varCntMdlPrms, 2] = vecPrfSd[idxSd]
 
                 # Increment parameter index:
                 varCntMdlPrms += 1
+
+    else:
+        print('Unknown keyword provided for coordinate system for model ' +
+              'parameter combinations: should be either crt or pol')
 
     return aryMdlParams
 
