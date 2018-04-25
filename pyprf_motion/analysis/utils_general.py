@@ -146,16 +146,18 @@ def cnvl_2D_gauss(idxPrc, aryMdlParamsChnk, arySptExpInf, tplPngSize, queOut):
 
     Parameters
     ----------
-    idxPrc : float, positive
-        Description of input 1.
+    idxPrc : int
+        Process ID of the process calling this function (for CPU
+        multi-threading). In GPU version, this parameter is 0 (just one thread
+        on CPU).
     aryMdlParamsChnk : 2d numpy array, shape [n_models, n_model_params]
-        Description of input 1.
+        Array with the model parameter combinations for this chunk.
     arySptExpInf : 3d numpy array, shape [n_x_pix, n_y_pix, n_conditions]
         All spatial conditions stacked along second axis.
     tplPngSize : tuple, 2.
-      Pixel dimensions of the visual space in which convolution takes place.
-    queOut : float, positive
-      Description of input 2.
+        Pixel dimensions of the visual space (width, height).
+    queOut : multiprocessing.queues.Queue
+        Queue to put the results on.
     Returns
     -------
     data : 2d numpy array, shape [n_models, n_conditions]

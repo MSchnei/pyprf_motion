@@ -36,14 +36,7 @@ def spm_hrf_compat(t,
                    p_u_ratio=6,
                    normalize=True,
                    ):
-    """ SPM HRF function from sum of two gamma PDFs
-
-    This function is designed to be partially compatible with SPMs `spm_hrf.m`
-    function.
-
-    The SPN HRF is a *peak* gamma PDF (with location `peak_delay` and
-    dispersion `peak_disp`), minus an *undershoot* gamma PDF (with location
-    `under_delay` and dispersion `under_disp`, and divided by the `p_u_ratio`).
+    """SPM HRF function from sum of two gamma PDFs
 
     Parameters
     ----------
@@ -63,15 +56,18 @@ def spm_hrf_compat(t,
     normalize : {True, False}, optional
         If True, divide HRF values by their sum before returning. SPM does this
         by default.
-
     Returns
     -------
     hrf : array
         vector length ``len(t)`` of samples from HRF at times `t`
-
     Notes
     -----
-    See ``spm_hrf.m`` in the SPM distribution.
+    [1] This function is designed to be partially compatible with SPMs
+    `spm_hrf.m` function.
+    [2] The SPN HRF is a *peak* gamma PDF (with location `peak_delay` and
+    dispersion `peak_disp`), minus an *undershoot* gamma PDF (with location
+    `under_delay` and dispersion `under_disp`, and divided by the `p_u_ratio`).
+    [3] See ``spm_hrf.m`` in the SPM distribution.
     """
     if len([v for v in [peak_delay, peak_disp, under_delay, under_disp]
             if v <= 0]):

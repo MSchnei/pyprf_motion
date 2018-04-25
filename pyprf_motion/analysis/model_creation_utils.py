@@ -26,31 +26,37 @@ from pyprf_motion.analysis.utils_hrf import create_boxcar
 
 def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
                  varExtYmin, varExtYmax, varNumPrfSizes, varPrfStdMin,
-                 varPrfStdMax, mode="pix"):
+                 varPrfStdMax, kwUnt="pix", kwCrd="crt"):
     """Create an array with all possible model parameter combinations
 
     Parameters
     ----------
     tplPngSize : tuple, 2
-        Description of input 2.
-    varNumX : float, positive
-        Description of input 2.
-    varExtXmin : float, positive
-        Description of input 2.
-    varExtXmax : float, positive
-        Description of input 2.
+        Pixel dimensions of the visual space (width, height).
+    varNumX : int, positive
+        Number of x-positions to model
+    varExtXmin : float
+        Extent of visual space from centre in negative x-direction (width)
+    varExtXmax : float
+        Extent of visual space from centre in positive x-direction (width)
     varNumY : float, positive
-        Description of input 2.
-    varExtYmin : float, positive
-        Description of input 2.
-    varExtYmax : float, positive
-        Description of input 2.
-    varNumPrfSizes : float, positive
-        Description of input 2.
+        Number of y-positions to model.
+    varExtYmin : int
+        Extent of visual space from centre in negative y-direction (height)
+    varExtYmax : float
+        Extent of visual space from centre in positive y-direction (height)
+    varNumPrfSizes : int, positive
+        Number of pRF sizes to model.
     varPrfStdMin : float, positive
-        Description of input 2.
+        Minimum pRF model size (standard deviation of 2D Gaussian)
     varPrfStdMax : float, positive
-        Description of input 2.
+        Maximum pRF model size (standard deviation of 2D Gaussian)
+    kwUnt: str
+        Keyword to set the unit for model parameter combinations; model
+        parameters can be in pixels ["pix"] or degrees of visual angles ["deg"]
+    kwCrd: str
+        Keyword to set the coordinate system for model parameter combinations;
+        parameters can be in cartesian ["crt"] or polar ["pol"] coordinates
     Returns
     -------
     aryMdlParams : 2d numpy array, shape [n_x_pos*n_y_pos*n_sd, 3]
@@ -59,7 +65,8 @@ def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
     ---------
     [1]
     """
-    if mode == "deg":
+
+    if kwUnt == "deg":
         # Vector with the moddeled x-positions of the pRFs:
         vecX = np.linspace(varExtXmin, varExtXmax, varNumX, endpoint=True)
 
@@ -70,7 +77,7 @@ def crt_mdl_prms(tplPngSize, varNumX, varExtXmin,  varExtXmax, varNumY,
         vecPrfSd = np.linspace(varPrfStdMin, varPrfStdMax, varNumPrfSizes,
                                endpoint=True)
 
-    elif mode == "pix":
+    elif kwUnt == "pix":
         # Vector with the x-indicies of the positions in the pixel space
         # at which to create pRF models.
         vecX = np.linspace(0, (tplPngSize[0] - 1), varNumX, endpoint=True)
@@ -145,7 +152,7 @@ def crt_mdl_rsp(arySptExpInf, tplPngSize, aryMdlParams, varPar):
     arySptExpInf : 3d numpy array, shape [n_x_pix, n_y_pix, n_conditions]
         All spatial conditions stacked along second axis.
     tplPngSize : tuple, 2
-        Description of input 2.
+        Pixel dimensions of the visual space (width, height).
     aryMdlParams : 2d numpy array, shape [n_x_pos*n_y_pos*n_sd, 3]
         Model parameters (x, y, sigma) for all models.
     varPar : int, positive
@@ -278,7 +285,7 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
     switchHrfSet : int, (1, 2, 3)
         Switch to determine which hrf basis functions are used
     tplPngSize : tuple
-        Description of input 1.
+        Pixel dimensions of the visual space (width, height).
     varPar : int, positive
         Description of input 1.
     Returns

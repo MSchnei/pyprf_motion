@@ -47,7 +47,7 @@ def model_creation(dicCnfg):
     cfg = cls_set_config(dicCnfg)
     # *************************************************************************
 
-    if cfg.lgcCrteMdl:  #noqa
+    if cfg.lgcCrteMdl:
 
         # *********************************************************************
         # *** Load spatial condition information
@@ -82,7 +82,7 @@ def model_creation(dicCnfg):
                                     cfg.varNumY, cfg.varExtYmin,
                                     cfg.varExtYmax, cfg.varNumPrfSizes,
                                     cfg.varPrfStdMin, cfg.varPrfStdMax,
-                                    mode="pix")
+                                    kwUnt="pix")
 
         # *********************************************************************
 
