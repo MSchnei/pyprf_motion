@@ -17,9 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Number of x-positions to model:
-varNumX = 68
+varNumX = 67
 # Number of y-positions to model:
-varNumY = 68
+varNumY = 67
 # Number of pRF sizes to model:
 varNumPrfSizes = 40
 
@@ -43,7 +43,7 @@ varExtYmax = 12.0
 # Maximum and minimum pRF model size (standard deviation of 2D Gaussian)
 # [degrees of visual angle]:
 varPrfStdMin = 0.2
-varPrfStdMax = 7.0
+varPrfStdMax = 14.0
 
 # Volume TR of input data [s]:
 varTr = 2.0
@@ -60,7 +60,7 @@ varNumVol = 1232
 varSdSmthTmp = 0.0
 
 # Number of processes to run in parallel:
-varPar = 8
+varPar = 10
 
 # Size of visual space model in which the pRF models are
 # created (x- and y-dimension). The x and y dimensions specified here need to
@@ -88,6 +88,11 @@ strVersion = 'cython'
 # which hrf functions should be used?
 # 1: only canonical, 2: can and temp deriv, 3: can, temp and spat deriv
 switchHrfSet = 1
+
+# should model fitting be based on k-fold cross-validation?
+# if not, set to 1
+# currently only supported for CPU
+varNumXval = 4
 
 # Create pRF time course models?
 lgcCrteMdl = True
