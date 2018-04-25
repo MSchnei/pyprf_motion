@@ -17,6 +17,7 @@ On the analysis side, pyprf_motion offers some additional features made necessar
 | [NiBabel](http://nipy.org/nibabel/)       | 2.2.1          |
 | [cython](http://cython.org/)              | 0.27.1         |
 | [tensorflow](https://www.tensorflow.org/) | 1.4.0          |
+| [scikit-learn](scikit-learn.org/)         | 0.19.1         |
 
 ## How to use
 ### 1. Present stimuli and record fMRI data
