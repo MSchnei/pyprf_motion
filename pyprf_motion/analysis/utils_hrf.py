@@ -24,7 +24,6 @@ import scipy.stats as sps
 from scipy.interpolate import interp1d
 
 
-# %% Hrf functions for convultion taken from nipy
 def spm_hrf_compat(t,
                    peak_delay=6,
                    under_delay=16,
@@ -110,13 +109,13 @@ def spmt(t):
     -----
     [1] This is the canonical HRF function as used in SPM. It
     has the following defaults:
-        delay of response (relative to onset) : 6s
-        delay of undershoot (relative to onset) : 16s
-        dispersion of response : 1s
-        dispersion of undershoot : 1s
-        ratio of response to undershoot : 6s
-        onset : 0s
-        length of kernel : 32s
+        - delay of response (relative to onset) : 6s
+        - delay of undershoot (relative to onset) : 16s
+        - dispersion of response : 1s
+        - dispersion of undershoot : 1s
+        - ratio of response to undershoot : 6s
+        - onset : 0s
+        - length of kernel : 32s
 
     References:
     -----
