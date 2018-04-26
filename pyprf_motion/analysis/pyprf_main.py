@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Find best fitting model time courses for population receptive fields.
-
-Use `import pRF_config as cfg` for static pRF analysis.
-
-Use `import pRF_config_motion as cfg` for pRF analysis with motion stimuli.
-"""
-
+"""Find best fitting model time courses for population receptive fields."""
 
 # Part of pyprf_motion library
-# Copyright (C) 2016  Ingo Marquardt
+# Copyright (C) 2018  Marian Schneider, Ingo Marquardt
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software

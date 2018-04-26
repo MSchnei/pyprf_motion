@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Load py_pRF_mapping config file."""
 
 import os

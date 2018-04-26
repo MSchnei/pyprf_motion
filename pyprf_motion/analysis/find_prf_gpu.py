@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Main function for pRF finding."""
+"""Main function for pRF finding using GPU."""
 
-# Part of py_pRF_mapping library
-# Copyright (C) 2016  Ingo Marquardt
+# Part of pyprf_motion library
+# Copyright (C) 2018  Ingo Marquardt, Marian Schneider
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software

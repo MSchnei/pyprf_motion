@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """pRF model creation."""
 
-# Part of py_pRF_mapping library
-# Copyright (C) 2016  Marian Schneider, Ingo Marquardt
+# Part of pyprf_motion library
+# Copyright (C) 2018  Marian Schneider, Ingo Marquardt
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
