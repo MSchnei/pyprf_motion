@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
-"""Main function for pRF finding."""
+"""Main function for pRF finding using CPU."""
 
-# Part of py_pRF_mapping library
-# Copyright (C) 2016  Ingo Marquardt
+# Part of pyprf_motion library
+# Copyright (C) 2018  Marian Schneider, Ingo Marquardt
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along with
+# this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
 from sklearn.model_selection import KFold
@@ -359,11 +359,25 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
 
         # Calculate coefficient of determination by comparing:
         # aryBstResFlds vs. arySsTotXval
+        vecBstR2Single = np.subtract(1.0,
+                                     np.divide(aryBstResFlds,
+                                               arySsTotXval))
+        np.save
+
         # Note that we take the mean across folds here
         vecBstR2 = np.subtract(1.0,
                                np.mean(np.divide(aryBstResFlds,
                                                  arySsTotXval),
                                        axis=1))
+        # Output list:
+        lstOut = [idxPrc,
+                  vecBstXpos,
+                  vecBstYpos,
+                  vecBstSd,
+                  vecBstR2,
+                  vecBstR2Single]
+
+        queOut.put(lstOut)
 
     else:
         # To calculate the coefficient of determination, we start with the
@@ -381,11 +395,11 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
                                np.divide(vecBstRes,
                                          vecSsTot))
 
-    # Output list:
-    lstOut = [idxPrc,
-              vecBstXpos,
-              vecBstYpos,
-              vecBstSd,
-              vecBstR2]
-
-    queOut.put(lstOut)
+        # Output list:
+        lstOut = [idxPrc,
+                  vecBstXpos,
+                  vecBstYpos,
+                  vecBstSd,
+                  vecBstR2]
+    
+        queOut.put(lstOut)
