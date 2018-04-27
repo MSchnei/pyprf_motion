@@ -322,9 +322,9 @@ def crt_nrl_tc(aryMdlRsp, aryTmpExpInf, varTr, varNumVol, varTmpOvsmpl):
 
     Parameters
     ----------
-    aryMdlRsp : 4d numpy array, shape [n_x_pos, n_y_pos, n_sd, n_cond]
+    aryMdlRsp : 2d numpy array, shape [n_x_pos * n_y_pos * n_sd, n_cond]
         Responses of 2D Gauss models to spatial conditions.
-    aryTmpExpInf : 2d numpy array, shape [varNumVol, 3]
+    aryTmpExpInf : 2d numpy array, shape [unknown, 3]
         Info about nature, onset and duration of conditions during experiments.
     varTr : float, positive
         Time to repeat (TR) of the (fMRI) experiment
@@ -334,8 +334,8 @@ def crt_nrl_tc(aryMdlRsp, aryTmpExpInf, varTr, varNumVol, varTmpOvsmpl):
         Factor by which the time courses should be temporally upsampled.
     Returns
     -------
-    aryNrlTc : 4d numpy array,
-               shape [n_x_pos, n_y_pos, n_sd, varNumVol*varTmpOvsmpl]
+    aryNrlTc : 2d numpy array,
+               shape [n_x_pos * n_y_pos * n_sd, varNumVol*varTmpOvsmpl]
         Neural time course models in temporally upsampled space
     Reference
     ---------
@@ -349,6 +349,7 @@ def crt_nrl_tc(aryMdlRsp, aryTmpExpInf, varTr, varNumVol, varTmpOvsmpl):
     print('---------Create boxcar functions for spatial condtions')
     aryBxCarTmp = create_boxcar(aryTmpExpInf[:, 0], aryTmpExpInf[:, 1],
                                 aryTmpExpInf[:, 2], varTr, varNumVol,
+                                aryExclCnd=np.array([0.]),
                                 varTmpOvsmpl=varTmpOvsmpl).T
 
     # pre-allocate pixelwise boxcar array
