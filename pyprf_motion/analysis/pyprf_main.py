@@ -200,43 +200,30 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
 
     print('---------Prepare pRF finding results for export')
 
-    # Create list for vectors with fitting results, in order to put the results
-    # into the correct order:
-    lstResXpos = [None] * cfg.varPar
-    lstResYpos = [None] * cfg.varPar
-    lstResSd = [None] * cfg.varPar
-    lstResR2 = [None] * cfg.varPar
-
     # Put output into correct order:
-    for idxRes in range(0, cfg.varPar):
+    lstPrfRes = sorted(lstPrfRes)
 
-        # Index of results (first item in output list):
-        varTmpIdx = lstPrfRes[idxRes][0]
-
-        # Put fitting results into list, in correct order:
-        lstResXpos[varTmpIdx] = lstPrfRes[idxRes][1]
-        lstResYpos[varTmpIdx] = lstPrfRes[idxRes][2]
-        lstResSd[varTmpIdx] = lstPrfRes[idxRes][3]
-        lstResR2[varTmpIdx] = lstPrfRes[idxRes][4]
-
-    # Concatenate output vectors (into the same order as the voxels that were
-    # included in the fitting):
+    # Concatenate output vectors:
     aryBstXpos = np.zeros(0)
     aryBstYpos = np.zeros(0)
     aryBstSd = np.zeros(0)
     aryBstR2 = np.zeros(0)
     for idxRes in range(0, cfg.varPar):
-        aryBstXpos = np.append(aryBstXpos, lstResXpos[idxRes])
-        aryBstYpos = np.append(aryBstYpos, lstResYpos[idxRes])
-        aryBstSd = np.append(aryBstSd, lstResSd[idxRes])
-        aryBstR2 = np.append(aryBstR2, lstResR2[idxRes])
+        aryBstXpos = np.append(aryBstXpos, lstPrfRes[idxRes][1])
+        aryBstYpos = np.append(aryBstYpos, lstPrfRes[idxRes][2])
+        aryBstSd = np.append(aryBstSd, lstPrfRes[idxRes][3])
+        aryBstR2 = np.append(aryBstR2, lstPrfRes[idxRes][4])
+
+    # Concatenate output arrays for R2 maps (saved for every run):
+    if np.greater(cfg.varNumXval, 1):
+        lstBstR2Single = []
+        for idxRes in range(0, cfg.varPar):
+            lstBstR2Single.append(lstPrfRes[idxRes][5])
+        aryBstR2Single = np.concatenate(lstBstR2Single, axis=0)
+        del(lstBstR2Single)
 
     # Delete unneeded large objects:
     del(lstPrfRes)
-    del(lstResXpos)
-    del(lstResYpos)
-    del(lstResSd)
-    del(lstResR2)
 
     # Put results form pRF finding into array (they originally needed to be
     # saved in a list due to parallelisation). Voxels were selected for pRF
@@ -310,6 +297,36 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
         # Save nii:
         strTmp = (cfg.strPathOut + lstNiiNames[idxOut] + '.nii.gz')
         nb.save(niiOut, strTmp)
+
+    # *************************************************************************
+
+    # *************************************************************************
+    # Save R2 maps from crossvalidation (saved for every run) as nii:
+    if np.greater(cfg.varNumXval, 1):
+        # Place voxels based on mask-exclusion:
+        aryPrfRes03 = np.zeros((varNumVoxTlt, cfg.varNumXval),
+                               dtype=np.float32)
+        for indDim in range(cfg.varNumXval):
+            aryPrfRes03[aryLgcMsk, indDim] = aryBstR2Single[:, indDim]
+
+        # Reshape pRF finding results into original image dimensions:
+        aryR2snglRes = np.reshape(aryPrfRes03,
+                                  [tplNiiShp[0],
+                                   tplNiiShp[1],
+                                   tplNiiShp[2],
+                                   cfg.varNumXval])
+        # adjust header
+        hdrMsk.set_data_shape(aryR2snglRes.shape)
+
+        # Create nii object for results:
+        niiOut = nb.Nifti1Image(aryR2snglRes,
+                                aryAff,
+                                header=hdrMsk
+                                )
+        # Save nii:
+        strTmp = (cfg.strPathOut + '_R2_single' + '.nii.gz')
+        nb.save(niiOut, strTmp)
+
     # *************************************************************************
 
     # *************************************************************************

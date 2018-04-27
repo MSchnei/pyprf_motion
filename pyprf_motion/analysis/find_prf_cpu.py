@@ -359,11 +359,25 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
 
         # Calculate coefficient of determination by comparing:
         # aryBstResFlds vs. arySsTotXval
+        vecBstR2Single = np.subtract(1.0,
+                                     np.divide(aryBstResFlds,
+                                               arySsTotXval))
+        np.save
+
         # Note that we take the mean across folds here
         vecBstR2 = np.subtract(1.0,
                                np.mean(np.divide(aryBstResFlds,
                                                  arySsTotXval),
                                        axis=1))
+        # Output list:
+        lstOut = [idxPrc,
+                  vecBstXpos,
+                  vecBstYpos,
+                  vecBstSd,
+                  vecBstR2,
+                  vecBstR2Single]
+
+        queOut.put(lstOut)
 
     else:
         # To calculate the coefficient of determination, we start with the
@@ -381,11 +395,11 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
                                np.divide(vecBstRes,
                                          vecSsTot))
 
-    # Output list:
-    lstOut = [idxPrc,
-              vecBstXpos,
-              vecBstYpos,
-              vecBstSd,
-              vecBstR2]
-
-    queOut.put(lstOut)
+        # Output list:
+        lstOut = [idxPrc,
+                  vecBstXpos,
+                  vecBstYpos,
+                  vecBstSd,
+                  vecBstR2]
+    
+        queOut.put(lstOut)
