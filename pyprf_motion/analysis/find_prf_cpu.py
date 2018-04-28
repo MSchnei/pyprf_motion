@@ -359,23 +359,31 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
 
         # Calculate coefficient of determination by comparing:
         # aryBstResFlds vs. arySsTotXval
-        vecBstR2Single = np.subtract(1.0,
-                                     np.divide(aryBstResFlds,
-                                               arySsTotXval))
-        np.save
 
-        # Note that we take the mean across folds here
-        vecBstR2 = np.subtract(1.0,
-                               np.mean(np.divide(aryBstResFlds,
-                                                 arySsTotXval),
-                                       axis=1))
+        # get logical to exclude zero divide
+        lgcExclZeros = np.all(np.greater(arySsTotXval,  np.array([0.0])),
+                              axis=1)
+
+        # Calculate R2 for every crossvalidation fold seperately
+        aryBstR2fld = np.zeros((arySsTotXval.shape), dtype=arySsTotXval.dtype)
+        aryBstR2fld[lgcExclZeros, :] = np.subtract(
+            1.0, np.divide(aryBstResFlds[lgcExclZeros, :],
+                           arySsTotXval[lgcExclZeros, :]))
+
+        # Calculate mean R2 across folds here
+        vecBstR2 = np.zeros((varNumVoxChnk))
+        vecBstR2[lgcExclZeros] = np.subtract(
+            1.0, np.mean(np.divide(aryBstResFlds[lgcExclZeros, :],
+                                   arySsTotXval[lgcExclZeros, :]),
+                         axis=1))
+
         # Output list:
         lstOut = [idxPrc,
                   vecBstXpos,
                   vecBstYpos,
                   vecBstSd,
                   vecBstR2,
-                  vecBstR2Single]
+                  aryBstR2fld]
 
         queOut.put(lstOut)
 
