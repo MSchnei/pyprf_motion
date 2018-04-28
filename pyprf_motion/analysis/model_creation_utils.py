@@ -191,7 +191,7 @@ def crt_mdl_prms(tplPngSize, varNum1, varExtXmin,  varExtXmax, varNum2,
         vecRad = np.linspace(0.0, varExtXmax, varNum1, endpoint=True)
 
         # Vector with the angular position:
-        vecTht = np.linspace(0.0, 2*np.pi, varNum2, endpoint=True)
+        vecTht = np.linspace(0.0, 2*np.pi, varNum2, endpoint=False)
 
         # get all possible combinations on the grid, using matrix indexing ij
         # of output
