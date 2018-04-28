@@ -29,7 +29,7 @@ from pyprf_motion.analysis.model_creation_utils import crt_mdl_prms
 from pyprf_motion.analysis.prepare import prep_models, prep_func
 
 ###### DEBUGGING ###############
-#strCsvCnfg = "/home/marian/Documents/Testing/pyprf_motion_xval/test_model_creation.csv"
+#strCsvCnfg = "/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/04_motDepPrf/pRF_results/S02_config_motDepPrf_flck.csv"
 #lgcTest = False
 ################################
 
@@ -85,7 +85,7 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     aryPrfTc = prep_models(aryPrfTc, varSdSmthTmp=cfg.varSdSmthTmp)
 
     # The functional data will be masked and demeaned:
-    aryLgcMsk, hdrMsk, aryAff, aryFunc, tplNiiShp = prep_func(
+    aryLgcMsk, aryLgcVar, hdrMsk, aryAff, aryFunc, tplNiiShp = prep_func(
         cfg.strPathNiiMask, cfg.lstPathNiiFunc)
     # *************************************************************************
 
@@ -242,10 +242,10 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     aryPrfRes01 = np.zeros((varNumVoxMsk, 6), dtype=np.float32)
 
     # Place voxels based on low-variance exlusion:
-    aryPrfRes01[:, 0] = aryBstXpos
-    aryPrfRes01[:, 1] = aryBstYpos
-    aryPrfRes01[:, 2] = aryBstSd
-    aryPrfRes01[:, 3] = aryBstR2
+    aryPrfRes01[aryLgcVar, 0] = aryBstXpos
+    aryPrfRes01[aryLgcVar, 1] = aryBstYpos
+    aryPrfRes01[aryLgcVar, 2] = aryBstSd
+    aryPrfRes01[aryLgcVar, 3] = aryBstR2
 
     # Total number of voxels:
     varNumVoxTlt = (tplNiiShp[0] * tplNiiShp[1] * tplNiiShp[2])
@@ -303,14 +303,21 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     # *************************************************************************
     # Save R2 maps from crossvalidation (saved for every run) as nii:
     if np.greater(cfg.varNumXval, 1):
-        # Place voxels based on mask-exclusion:
-        aryPrfRes03 = np.zeros((varNumVoxTlt, cfg.varNumXval),
+
+        # Place voxels based on low-variance exlusion:
+        aryPrfRes03 = np.zeros((varNumVoxMsk, cfg.varNumXval),
                                dtype=np.float32)
         for indDim in range(cfg.varNumXval):
-            aryPrfRes03[aryLgcMsk, indDim] = aryBstR2Single[:, indDim]
+            aryPrfRes03[aryLgcVar, indDim] = aryBstR2Single[:, indDim]
+
+        # Place voxels based on mask-exclusion:
+        aryPrfRes04 = np.zeros((varNumVoxTlt, cfg.varNumXval),
+                               dtype=np.float32)
+        for indDim in range(cfg.varNumXval):
+            aryPrfRes04[aryLgcMsk, indDim] = aryPrfRes03[:, indDim]
 
         # Reshape pRF finding results into original image dimensions:
-        aryR2snglRes = np.reshape(aryPrfRes03,
+        aryR2snglRes = np.reshape(aryPrfRes04,
                                   [tplNiiShp[0],
                                    tplNiiShp[1],
                                    tplNiiShp[2],

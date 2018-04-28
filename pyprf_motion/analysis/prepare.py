@@ -131,6 +131,15 @@ def prep_func(strPathNiiMask, lstPathNiiFunc):
     aryLgcMsk : np.array
         3D numpy array with logial values. Externally supplied mask (e.g grey
         matter mask). Voxels that are `False` in the mask are excluded.
+    aryLgcVar : np.array
+        1D numpy array containing logical values. One value per voxel after
+        mask has been applied. If `True`, the variance of the voxel's time
+        course is larger than zero, and the voxel is included in the output
+        array (`aryFunc`). If `False`, the varuance of the voxel's time course
+        is zero, and the voxel has been excluded from the output (`aryFunc`).
+        This is to avoid problems in the subsequent model fitting. This array
+        is necessary to put results into original dimensions after model
+        fitting.
     hdrMsk : nibabel-header-object
         Nii header of mask.
     aryAff : np.array
@@ -215,4 +224,22 @@ def prep_func(strPathNiiMask, lstPathNiiFunc):
     aryFunc = np.concatenate(lstFunc, axis=1).astype(np.float32, copy=False)
     del(lstFunc)
 
-    return aryLgcMsk, hdrMsk, aryAff, aryFunc, tplNiiShp
+    # Voxels that are outside the brain and have no, or very little, signal
+    # should not be included in the pRF model finding. We take the variance
+    # over time and exclude voxels with a suspiciously low variance. Because
+    # the data given into the cython or GPU function has float32 precision, we
+    # calculate the variance on data with float32 precision.
+    aryFuncVar = np.var(aryFunc, axis=1, dtype=np.float32)
+
+    # Is the variance greater than zero?
+    aryLgcVar = np.greater(aryFuncVar,
+                           np.array([0.0001]).astype(np.float32)[0])
+
+    # Array with functional data for which conditions (mask inclusion and
+    # cutoff value) are fullfilled:
+    aryFunc = aryFunc[aryLgcVar, :]
+
+    print('------Number of voxels excluded due to low variance: ' +
+          str(np.sum(np.invert(aryLgcVar))))
+
+    return aryLgcMsk, aryLgcVar, hdrMsk, aryAff, aryFunc, tplNiiShp
