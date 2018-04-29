@@ -114,7 +114,7 @@ def prep_models(aryPrfTc, varSdSmthTmp=2.0):
     return aryPrfTc
 
 
-def prep_func(strPathNiiMask, lstPathNiiFunc):
+def prep_func(strPathNiiMask, lstPathNiiFunc, varAvgThr=10., varVarThr=0.0001):
     """
     Load & prepare functional data.
 
@@ -125,21 +125,28 @@ def prep_func(strPathNiiMask, lstPathNiiFunc):
         a value greater than zero in the mask are considered.
     lstPathNiiFunc : list
         List of paths of functional data (nii files).
+    varAvgThr : float, positive
+        Float. Voxels that have at least one run with a mean lower than this
+        (before demeaning) will be excluded from model fitting.
+    varVarThr : float, positive
+        Float. Voxels that have at least one run with a variance lower than
+        this (after demeaning) will be excluded from model fitting.
 
     Returns
     -------
     aryLgcMsk : np.array
         3D numpy array with logial values. Externally supplied mask (e.g grey
         matter mask). Voxels that are `False` in the mask are excluded.
-    aryLgcVar : np.array
+    vecLgcIncl : np.array
         1D numpy array containing logical values. One value per voxel after
-        mask has been applied. If `True`, the variance of the voxel's time
-        course is larger than zero, and the voxel is included in the output
-        array (`aryFunc`). If `False`, the varuance of the voxel's time course
-        is zero, and the voxel has been excluded from the output (`aryFunc`).
-        This is to avoid problems in the subsequent model fitting. This array
-        is necessary to put results into original dimensions after model
-        fitting.
+        mask has been applied. If `True`, the variance and mean of the voxel's
+        time course are greater than the provided thresholds in all runs and
+        the voxel is included in the output array (`aryFunc`). If `False`, the
+        variance or mean of the voxel's time course is lower than threshold in
+        at least one run and the voxel has been excluded from the output
+        (`aryFunc`). This is to avoid problems in the subsequent model fitting.
+        This array is necessary to put results into original dimensions after
+        model fitting.
     hdrMsk : nibabel-header-object
         Nii header of mask.
     aryAff : np.array
@@ -183,6 +190,12 @@ def prep_func(strPathNiiMask, lstPathNiiFunc):
     # List for arrays with functional data (possibly several runs):
     lstFunc = []
 
+    # List for averages of the individual runs (before demeaning)
+    lstFuncAvg = []
+
+    # List for variances of the individual runs (after demeaning)
+    lstFuncVar = []
+
     # Number of runs:
     varNumRun = len(lstPathNiiFunc)
 
@@ -208,12 +221,18 @@ def prep_func(strPathNiiMask, lstPathNiiFunc):
                                np.array([0], dtype=np.int16)[0])
         aryTmpFunc = aryTmpFunc[aryLgcMsk, :]
 
+        # save the mean of the run
+        lstFuncAvg.append(np.mean(aryTmpFunc, axis=1, dtype=np.float32))
+
         # De-mean functional data:
         print('------------Demean')
         aryTmpFunc = np.subtract(aryTmpFunc,
                                  np.mean(aryTmpFunc,
                                          axis=1,
                                          dtype=np.float32)[:, None])
+
+        # also save the variance of the run
+        lstFuncVar.append(np.var(aryTmpFunc, axis=1, dtype=np.float32))
 
         # Put prepared functional data of current run into list:
         lstFunc.append(aryTmpFunc)
@@ -224,22 +243,50 @@ def prep_func(strPathNiiMask, lstPathNiiFunc):
     aryFunc = np.concatenate(lstFunc, axis=1).astype(np.float32, copy=False)
     del(lstFunc)
 
+    # Put the averages (before demeaning) from the separate runs into one
+    # array. 2D array of the form aryFuncVar[voxelCount, nr of runs]
+    aryFuncAvg = np.stack(lstFuncAvg, axis=1).astype(np.float32, copy=False)
+    del(lstFuncAvg)
+
+    # Put the variance (after demeaning) from the separate runs into one array.
+    # 2D array of the form aryFuncVar[voxelCount, nr of runs]
+    aryFuncVar = np.stack(lstFuncVar, axis=1).astype(np.float32, copy=False)
+    del(lstFuncVar)
+
+    # Especially if data were recorded in different sessions, there can
+    # sometimes be voxels that have close to zero signal in runs from one
+    # session but regular signalin the runs from another session. These voxels
+    # are very few, are located at the edge of the functional and can cause
+    # problems during model fitting. They are therefore excluded.
+
+    # Is the mean greater than threshold?
+    aryLgcAvg = np.greater(aryFuncAvg,
+                           np.array([varAvgThr]).astype(np.float32)[0])
+    # Mean needs to be greater than threshold in every single run
+    vecLgcAvg = np.all(aryLgcAvg, axis=1)
+
     # Voxels that are outside the brain and have no, or very little, signal
     # should not be included in the pRF model finding. We take the variance
-    # over time and exclude voxels with a suspiciously low variance. Because
-    # the data given into the cython or GPU function has float32 precision, we
-    # calculate the variance on data with float32 precision.
-    aryFuncVar = np.var(aryFunc, axis=1, dtype=np.float32)
+    # over time and exclude voxels with a suspiciously low variance, if they
+    # have low variance in at least one run. Because the data given into the
+    # cython or GPU function has float32 precision, we calculate the variance
+    # on data with float32 precision.
 
-    # Is the variance greater than zero?
+    # Is the variance greater than threshold?
     aryLgcVar = np.greater(aryFuncVar,
-                           np.array([0.0001]).astype(np.float32)[0])
+                           np.array([varVarThr]).astype(np.float32)[0])
+    # Variance needs to be greater than threshold in every single run
+    vecLgcVar = np.all(aryLgcVar, axis=1)
+
+    # combine the logical vectors for exclusion resulting from low variance and
+    # low mean signal time course
+    vecLgcIncl = np.logical_and(vecLgcAvg, vecLgcVar)
 
     # Array with functional data for which conditions (mask inclusion and
     # cutoff value) are fullfilled:
-    aryFunc = aryFunc[aryLgcVar, :]
+    aryFunc = aryFunc[vecLgcIncl, :]
 
-    print('------Number of voxels excluded due to low variance: ' +
-          str(np.sum(np.invert(aryLgcVar))))
+    print('------Number of voxels excluded due to low mean or variance: ' +
+          str(np.sum(np.invert(vecLgcIncl))))
 
-    return aryLgcMsk, aryLgcVar, hdrMsk, aryAff, aryFunc, tplNiiShp
+    return aryLgcMsk, vecLgcIncl, hdrMsk, aryAff, aryFunc, tplNiiShp
