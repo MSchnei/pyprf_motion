@@ -114,7 +114,8 @@ def prep_models(aryPrfTc, varSdSmthTmp=2.0):
     return aryPrfTc
 
 
-def prep_func(strPathNiiMask, lstPathNiiFunc, varAvgThr=10., varVarThr=0.0001):
+def prep_func(strPathNiiMask, lstPathNiiFunc, varAvgThr=100.,
+              varVarThr=0.0001):
     """
     Load & prepare functional data.
 
@@ -286,6 +287,11 @@ def prep_func(strPathNiiMask, lstPathNiiFunc, varAvgThr=10., varVarThr=0.0001):
     # cutoff value) are fullfilled:
     aryFunc = aryFunc[vecLgcIncl, :]
 
+    # print info about the exclusion of voxels
+    print('---Minimum mean threshold for voxels applied at: ' +
+          str(varAvgThr))
+    print('---Minimum variance threshold for voxels applied at:  ' +
+          str(varVarThr))
     print('------Number of voxels excluded due to low mean or variance: ' +
           str(np.sum(np.invert(vecLgcIncl))))
 
