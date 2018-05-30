@@ -132,7 +132,7 @@ def crt_mdl_prms(tplPngSize, varNum1, varExtXmin,  varExtXmax, varNum2,
     # columns correspond to: (1) the x-position, (2) the y-position, and
     # (3) the standard deviation. The parameters are in units of the
     # upsampled visual space.
-    aryMdlParams = np.zeros((varNumMdls, 3))
+    aryMdlParams = np.zeros((varNumMdls, 3), dtype=np.float32)
 
     # Counter for parameter array:
     varCntMdlPrms = 0
@@ -456,7 +456,7 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
     # Put output into correct order:
     lstConv = sorted(lstConv)
     # Concatenate convolved pixel time courses (into the same order
-    aryNrlTcConv = np.zeros((0, switchHrfSet, varNumVol))
+    aryNrlTcConv = np.zeros((0, switchHrfSet, varNumVol), dtype=np.float32)
     for idxRes in range(0, varPar):
         aryNrlTcConv = np.concatenate((aryNrlTcConv, lstConv[idxRes][1]),
                                       axis=0)
@@ -468,4 +468,4 @@ def crt_prf_tc(aryNrlTc, varNumVol, varTr, varTmpOvsmpl, switchHrfSet,
     tplOutShp = tplInpShp[:-1] + (len(lstHrf), ) + (varNumVol, )
 
     # Return:
-    return np.reshape(aryNrlTcConv, tplOutShp).astype('float16')
+    return np.reshape(aryNrlTcConv, tplOutShp).astype(np.float32)

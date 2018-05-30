@@ -268,14 +268,11 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     del(aryPrfRes02)
 
     # Calculate polar angle map:
-    aryPrfRes[:, :, :, 4] = np.arctan2(aryPrfRes[:, :, :, 1],
-                                       aryPrfRes[:, :, :, 0])
+    aryPrfRes[..., 4] = np.arctan2(aryPrfRes[..., 1], aryPrfRes[..., 0])
 
     # Calculate eccentricity map (r = sqrt( x^2 + y^2 ) ):
-    aryPrfRes[:, :, :, 5] = np.sqrt(np.add(np.power(aryPrfRes[:, :, :, 0],
-                                                    2.0),
-                                           np.power(aryPrfRes[:, :, :, 1],
-                                                    2.0)))
+    aryPrfRes[..., 5] = np.sqrt(np.add(np.square(aryPrfRes[..., 0]),
+                                       np.square(aryPrfRes[..., 1])))
 
     # List with name suffices of output images:
     lstNiiNames = ['_x_pos',
@@ -290,7 +287,7 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     # Save nii results:
     for idxOut in range(0, 6):
         # Create nii object for results:
-        niiOut = nb.Nifti1Image(aryPrfRes[:, :, :, idxOut],
+        niiOut = nb.Nifti1Image(aryPrfRes[..., idxOut],
                                 aryAff,
                                 header=hdrMsk
                                 )
@@ -303,25 +300,32 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     # *************************************************************************
     # Save R2 maps from crossvalidation (saved for every run) as nii:
     if np.greater(cfg.varNumXval, 1):
+        # truncate extremely negative R2 values
+        aryBstR2Single[np.where(np.less_equal(aryBstR2Single, -1.0))] = -1.0
 
         # Place voxels based on low-variance exlusion:
-        aryPrfRes03 = np.zeros((varNumVoxMsk, cfg.varNumXval),
+        aryPrfRes01 = np.zeros((varNumVoxMsk, cfg.varNumXval),
                                dtype=np.float32)
+
         for indDim in range(cfg.varNumXval):
-            aryPrfRes03[aryLgcVar, indDim] = aryBstR2Single[:, indDim]
+            aryPrfRes01[aryLgcVar, indDim] = aryBstR2Single[:, indDim]
 
         # Place voxels based on mask-exclusion:
-        aryPrfRes04 = np.zeros((varNumVoxTlt, cfg.varNumXval),
+        aryPrfRes02 = np.zeros((varNumVoxTlt, cfg.varNumXval),
                                dtype=np.float32)
         for indDim in range(cfg.varNumXval):
-            aryPrfRes04[aryLgcMsk, indDim] = aryPrfRes03[:, indDim]
+            aryPrfRes02[aryLgcMsk, indDim] = aryPrfRes01[:, indDim]
 
         # Reshape pRF finding results into original image dimensions:
-        aryR2snglRes = np.reshape(aryPrfRes04,
+        aryR2snglRes = np.reshape(aryPrfRes02,
                                   [tplNiiShp[0],
                                    tplNiiShp[1],
                                    tplNiiShp[2],
                                    cfg.varNumXval])
+
+        del(aryPrfRes01)
+        del(aryPrfRes02)
+
         # adjust header
         hdrMsk.set_data_shape(aryR2snglRes.shape)
 

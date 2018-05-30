@@ -126,10 +126,10 @@ def prep_func(strPathNiiMask, lstPathNiiFunc, varAvgThr=100.,
         a value greater than zero in the mask are considered.
     lstPathNiiFunc : list
         List of paths of functional data (nii files).
-    varAvgThr : float, positive
+    varAvgThr : float, positive, default = 100.
         Float. Voxels that have at least one run with a mean lower than this
         (before demeaning) will be excluded from model fitting.
-    varVarThr : float, positive
+    varVarThr : float, positive, default = 0.0001
         Float. Voxels that have at least one run with a variance lower than
         this (after demeaning) will be excluded from model fitting.
 

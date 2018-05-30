@@ -315,7 +315,10 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
     # (xval=False) for each voxel.
 
     if lgcXval:
-        print('------------Process ' + str(idxPrc) + ', Calculate R2')
+
+        # create vector that allows to check whether every voxel is visited
+        # exactly once
+        vecVxlTst = np.zeros(aryFuncChnk.shape[1])
 
         # Since we did not do this during finding the best model, we still need
         # to calculate deviation from a mean model for every voxel and fold
@@ -331,15 +334,18 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
         aryUnqRows = aryBstPrm[vecUnqIdx]
 
         # calculate deviation from a mean model for every voxel and fold
-        arySsTotXval = np.empty((aryBstResFlds.shape), dtype=np.float32)
+        arySsTotXval = np.zeros((aryBstResFlds.shape),
+                                dtype=aryBstResFlds.dtype)
+
         # loop over all best-fitting model parameter combinations found
         for vecPrm in aryUnqRows:
-#            # get logical for the prf time course for this model combination
-#            lgcPrftc = np.isclose(aryMdlParams, vecPrm, atol=1e-04).all(axis=1)
-#            # get model time course and make sure it is always one dimensional
-#            vecMdl = np.squeeze(aryPrfTc[lgcPrftc, :])
             # get logical for voxels for which this prm combi was the best
             lgcVxl = np.isclose(aryBstPrm, vecPrm, atol=1e-04).all(axis=1)
+            if np.all(np.invert(lgcVxl)):
+                print('------------No voxel found, process ' + str(idxPrc))
+            # mark those voxels that were visited
+            vecVxlTst[lgcVxl] += 1
+
             # get voxel time course
             aryVxlTc = aryFuncChnk[:, lgcVxl]
             # loop over cross-validation folds
@@ -357,24 +363,29 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
                                   axis=0)
                 arySsTotXval[lgcVxl, idxXval] = vecSsTot
 
+        # check that every voxel was visited exactly once
+        errMsg = 'At least one voxel visited more than once for SStot calc'
+        assert len(vecVxlTst) == np.sum(vecVxlTst), errMsg
+
         # Calculate coefficient of determination by comparing:
         # aryBstResFlds vs. arySsTotXval
 
-        # get logical to exclude zero divide
+        # get logical to check that arySsTotXval is greater than zero in all
+        # voxels and folds
         lgcExclZeros = np.all(np.greater(arySsTotXval,  np.array([0.0])),
                               axis=1)
+        print('------------Nr of voxels: ' + str(len(lgcExclZeros)))
+        print('------------Nr of voxels avove 0: ' + str(np.sum(lgcExclZeros)))
 
         # Calculate R2 for every crossvalidation fold seperately
-        aryBstR2fld = np.zeros((arySsTotXval.shape), dtype=arySsTotXval.dtype)
-        aryBstR2fld[lgcExclZeros, :] = np.subtract(
-            1.0, np.divide(aryBstResFlds[lgcExclZeros, :],
-                           arySsTotXval[lgcExclZeros, :]))
+        aryBstR2fld = np.subtract(
+            1.0, np.divide(aryBstResFlds,
+                           arySsTotXval))
 
         # Calculate mean R2 across folds here
-        vecBstR2 = np.zeros((varNumVoxChnk))
-        vecBstR2[lgcExclZeros] = np.subtract(
-            1.0, np.mean(np.divide(aryBstResFlds[lgcExclZeros, :],
-                                   arySsTotXval[lgcExclZeros, :]),
+        vecBstR2 = np.subtract(
+            1.0, np.mean(np.divide(aryBstResFlds,
+                                   arySsTotXval),
                          axis=1))
 
         # Output list:
@@ -409,5 +420,5 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
                   vecBstYpos,
                   vecBstSd,
                   vecBstR2]
-    
+
         queOut.put(lstOut)
