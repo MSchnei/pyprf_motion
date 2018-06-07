@@ -56,11 +56,13 @@ def rmp_deg_pixel_x_y_s(vecX, vecY, vecPrfSd, tplPngSize,
     vecPrfSd : 1D numpy array
         Array with possible sd parametrs in pixel
     """
-    # Remap moddeled x-positions of the pRFs:
-    vecXpxl = rmp_rng(vecX, 0.0, (tplPngSize[0] - 1))
+    # Remap modelled x-positions of the pRFs:
+    vecXpxl = rmp_rng(vecX, 0.0, (tplPngSize[0] - 1), varOldThrMin=varExtXmin,
+                      varOldAbsMax=varExtXmax)
 
-    # Remap moddeled y-positions of the pRFs:
-    vecYpxl = rmp_rng(vecY, 0.0, (tplPngSize[1] - 1))
+    # Remap modelled y-positions of the pRFs:
+    vecYpxl = rmp_rng(vecY, 0.0, (tplPngSize[1] - 1), varOldThrMin=varExtYmin,
+                      varOldAbsMax=varExtYmax)
 
     # We calculate the scaling factor from degrees of visual angle to
     # pixels separately for the x- and the y-directions (the two should

@@ -150,7 +150,8 @@ def map_pol_to_crt(aryTht, aryRad):
     return aryXCrds, aryYrds
 
 
-def rmp_rng(aryVls, varNewMin, varNewMax):
+def rmp_rng(aryVls, varNewMin, varNewMax, varOldThrMin=None,
+            varOldAbsMax=None):
     """Remap values in an array from
 
     Parameters
@@ -161,15 +162,29 @@ def rmp_rng(aryVls, varNewMin, varNewMax):
         Desired minimum value of new, remapped array.
     varNewMax : float
         Desired maximum value of new, remapped array.
+    varOldThrMin : float
+        Theoretical minimum of old distribution. Can be specified if this
+        theoretical minimum does not occur in empirical distribution but
+        should be considered nontheless.
+    varOldThrMin : float
+        Theoretical maximum of old distribution. Can be specified if this
+        theoretical maximum does not occur in empirical distribution but
+        should be considered nontheless.
 
     Returns
     -------
     aryVls : 1D numpy array
         Array with remapped values.
     """
+    if varOldThrMin is None:
+        varOldMin = aryVls.min()
+    else:
+        varOldMin = varOldThrMin
+    if varOldAbsMax is None:
+        varOldMax = aryVls.max()
+    else:
+        varOldMax = varOldAbsMax
 
-    varOldMin = aryVls.min()
-    varOldMax = aryVls.max()
     aryNewVls = np.empty((aryVls.shape), dtype=aryVls.dtype)
     for ind, val in enumerate(aryVls):
         aryNewVls[ind] = (((val - varOldMin) * (varNewMax - varNewMin)) /
