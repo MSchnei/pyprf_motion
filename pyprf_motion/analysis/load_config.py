@@ -9,7 +9,7 @@ import ast
 strDir = os.path.dirname(os.path.abspath(__file__))
 
 
-def load_config(strCsvCnfg, lgcTest=False):  #noqa
+def load_config(strCsvCnfg, lgcTest=False):
     """
     Load py_pRF_mapping config file.
 
@@ -261,7 +261,6 @@ def load_config(strCsvCnfg, lgcTest=False):  #noqa
         # Prepend absolute path of this file to config file paths:
         dicCnfg['strPathNiiMask'] = (strDir + dicCnfg['strPathNiiMask'])
         dicCnfg['strPathOut'] = (strDir + dicCnfg['strPathOut'])
-        dicCnfg['strPathPng'] = (strDir + dicCnfg['strPathPng'])
         dicCnfg['strPathMdl'] = (strDir + dicCnfg['strPathMdl'])
 
         # Loop through functional runs:
