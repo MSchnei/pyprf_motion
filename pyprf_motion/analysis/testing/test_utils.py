@@ -25,7 +25,7 @@ def test_main():
 
     # Load template result:
     aryTmplR2, _, _ = util.load_nii(
-            strDir + 'pRF_tmpl_results_np_noxval_crt_R2.nii.gz')
+            strDir + '/pRF_tmpl_results_np_noxval_crt_R2.nii.gz')
 
     # Round template results:
     aryTmplR2 = np.around(aryTmplR2.astype(np.float32), decimals=varRnd)
@@ -52,7 +52,7 @@ def test_main():
 
     # Load template result:
     aryTmplR2, _, _ = util.load_nii(
-            strDir + 'pRF_tmpl_results_np_xval_crt_R2.nii.gz')
+            strDir + '/pRF_tmpl_results_np_xval_crt_R2.nii.gz')
 
     # Round template results:
     aryTmplR2 = np.around(aryTmplR2.astype(np.float32), decimals=varRnd)
@@ -79,7 +79,7 @@ def test_main():
 
     # Load template result:
     aryTmplR2, _, _ = util.load_nii(
-            strDir + 'pRF_tmpl_results_np_noxval_pol_R2.nii.gz')
+            strDir + '/pRF_tmpl_results_np_noxval_pol_R2.nii.gz')
 
     # Round template results:
     aryTmplR2 = np.around(aryTmplR2.astype(np.float32), decimals=varRnd)
@@ -106,7 +106,7 @@ def test_main():
 
     # Load template result:
     aryTmplR2, _, _ = util.load_nii(
-            strDir + 'pRF_tmpl_results_np_xval_pol_R2.nii.gz')
+            strDir + '/pRF_tmpl_results_np_xval_pol_R2.nii.gz')
 
     # Round template results:
     aryTmplR2 = np.around(aryTmplR2.astype(np.float32), decimals=varRnd)
@@ -133,7 +133,7 @@ def test_main():
 
     # Load template result:
     aryTmplR2, _, _ = util.load_nii(
-            strDir + 'pRF_tmpl_results_cy_noxval_crt_R2.nii.gz')
+            strDir + '/pRF_tmpl_results_cy_noxval_crt_R2.nii.gz')
 
     # Round template results:
     aryTmplR2 = np.around(aryTmplR2.astype(np.float32), decimals=varRnd)
@@ -160,7 +160,7 @@ def test_main():
 
     # Load template result:
     aryTmplR2, _, _ = util.load_nii(
-            strDir + 'pRF_tmpl_results_cy_xval_crt_R2.nii.gz')
+            strDir + '/pRF_tmpl_results_cy_xval_crt_R2.nii.gz')
 
     # Round template results:
     aryTmplR2 = np.around(aryTmplR2.astype(np.float32), decimals=varRnd)
@@ -187,7 +187,7 @@ def test_main():
 
     # Load template result:
     aryTmplR2, _, _ = util.load_nii(
-            strDir + 'pRF_tmpl_results_cy_noxval_pol_R2.nii.gz')
+            strDir + '/pRF_tmpl_results_cy_noxval_pol_R2.nii.gz')
 
     # Round template results:
     aryTmplR2 = np.around(aryTmplR2.astype(np.float32), decimals=varRnd)
@@ -214,7 +214,7 @@ def test_main():
 
     # Load template result:
     aryTmplR2, _, _ = util.load_nii(
-            strDir + 'pRF_tmpl_results_cy_xval_pol_R2.nii.gz')
+            strDir + '/pRF_tmpl_results_cy_xval_pol_R2.nii.gz')
 
     # Round template results:
     aryTmplR2 = np.around(aryTmplR2.astype(np.float32), decimals=varRnd)
@@ -241,7 +241,7 @@ def test_main():
 
     # Load template result:
     aryTmplR2, _, _ = util.load_nii(
-            strDir + 'pRF_tmpl_results_tf_noxval_crt_R2.nii.gz')
+            strDir + '/pRF_tmpl_results_tf_noxval_crt_R2.nii.gz')
 
     # Round template results:
     aryTmplR2 = np.around(aryTmplR2.astype(np.float32), decimals=varRnd)
@@ -268,7 +268,7 @@ def test_main():
 
     # Load template result:
     aryTmplR2, _, _ = util.load_nii(
-            strDir + 'pRF_tmpl_results_tf_noxval_pol_R2.nii.gz')
+            strDir + '/pRF_tmpl_results_tf_noxval_pol_R2.nii.gz')
 
     # Round template results:
     aryTmplR2 = np.around(aryTmplR2.astype(np.float32), decimals=varRnd)
