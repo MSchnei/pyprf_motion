@@ -21,7 +21,6 @@ conda install pip
 1. Clone repository
 ```bash
 git clone https://github.com/MSchnei/pyprf_motion.git
-cd /path/to/cloned/pyprf_motion
 ```
 
 2. Install numpy, e.g. by running:
