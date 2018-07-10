@@ -11,6 +11,12 @@ On the analysis side, pyprf_motion offers some additional features made necessar
 
 For installation, follow these steps:
 
+### Option A: install via pip
+```bash
+pip install pyprf_motion
+```
+### Option B: install from github repository
+
 0. (Optional) Create conda environment
 ```bash
 conda create -n env_pyprf_motion python=2.7
