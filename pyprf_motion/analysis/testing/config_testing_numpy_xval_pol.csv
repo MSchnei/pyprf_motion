@@ -81,13 +81,13 @@ varVslSpcSzeY = 128
 
 # Path of functional data (needs to have same number of volumes as there are
 # PNGs):
-lstPathNiiFunc = ['/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/exmpl_data_func_run01.nii.gz', '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/exmpl_data_func_run02.nii.gz', '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/exmpl_data_func_run03.nii.gz', '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/exmpl_data_func_run04.nii.gz']
+lstPathNiiFunc = ['/testing/exmpl_data_func_run01.nii.gz', '/testing/exmpl_data_func_run02.nii.gz', '/testing/exmpl_data_func_run03.nii.gz', '/testing/exmpl_data_func_run04.nii.gz']
 
 # Path of mask (to restrict pRF model finding):
-strPathNiiMask = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/exmpl_data_mask.nii.gz'
+strPathNiiMask = '/testing/exmpl_data_mask.nii.gz'
 
 # Output basename:
-strPathOut = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/result/pRF_test_results_np_xval_pol'
+strPathOut = '/testing/result/pRF_test_results_np_xval_pol'
 
 # Which version to use for pRF finding. 'numpy' or 'cython' for pRF finding on
 # CPU, 'gpu' for using GPU.
@@ -111,10 +111,10 @@ lgcCrteMdl = False
 # be provided:
 
 # Name of the npy that holds spatial info about conditions
-strSptExpInf = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/expInfo/sptInfo/arySptExpInf.npy'
+strSptExpInf = '/testing/expInfo/sptInfo/arySptExpInf.npy'
 
 # Name of the npy that holds temporal info about conditions
-strTmpExpInf = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/expInfo/tmpInfo/aryTmpExpInf.npy'
+strTmpExpInf = '/testing/expInfo/tmpInfo/aryTmpExpInf.npy'
 
 # Factor by which time courses and HRF will be upsampled for the convolutions
 # Higher number might yield more accurate reults but also takes up more RAM.
@@ -122,4 +122,4 @@ varTmpOvsmpl = 20.
 
 # Path to npy file with pRF time course models (to save or load). Without file
 # extension.
-strPathMdl = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/result/pRF_test_model_tc_pol'
+strPathMdl = '/testing/result/pRF_test_model_tc_pol'
