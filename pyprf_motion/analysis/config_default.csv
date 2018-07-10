@@ -101,7 +101,7 @@ switchHrfSet = 1
 # Should model fitting be based on k-fold cross-validation?
 # if desired, it is recommended to set this equal to the number of runs
 # if not, set to 1 and no cross-validation will be implemented
-# currently only supported for CPU
+# currently only supported for CPU, set to 1 if using GPU
 varNumXval = 4
 
 # Create pRF time course models?

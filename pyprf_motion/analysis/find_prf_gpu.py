@@ -23,8 +23,7 @@ import threading
 import tensorflow as tf
 
 
-def find_prf_gpu(idxPrc, vecMdlXpos, vecMdlYpos, vecMdlSd, aryFunc,  #noqa
-                 aryPrfTc, queOut):
+def find_prf_gpu(idxPrc, aryMdlParams, aryFunc, aryPrfTc, queOut):
     """
     Find best fitting pRF model for voxel time course, using the GPU.
 
@@ -34,12 +33,8 @@ def find_prf_gpu(idxPrc, vecMdlXpos, vecMdlYpos, vecMdlSd, aryFunc,  #noqa
         Process ID of the process calling this function (for CPU
         multi-threading). In GPU version, this parameter is 0 (just one thread
         on CPU).
-    vecMdlXpos : np.array
-        1D array with pRF model x positions.
-    vecMdlYpos : np.array
-        1D array with pRF model y positions.
-    vecMdlSd : np.array
-        1D array with pRF model sizes (SD of Gaussian).
+    aryMdlParams : np.array
+        2D array with all pRF model parameter combinations.
     aryFunc : np.array
         2D array with functional MRI data, with shape aryFunc[voxel, time].
     aryPrfTc : np.array
@@ -107,13 +102,6 @@ def find_prf_gpu(idxPrc, vecMdlXpos, vecMdlYpos, vecMdlSd, aryFunc,  #noqa
 
     print('------Prepare pRF model time courses for graph')
 
-    # Number of modelled x-positions in the visual space:
-    varNum1 = aryPrfTc.shape[0]
-    # Number of modelled y-positions in the visual space:
-    varNum2 = aryPrfTc.shape[1]
-    # Number of modelled pRF sizes:
-    varNumPrfSizes = aryPrfTc.shape[2]
-
     # Reshape pRF model time courses:
     aryPrfTc = np.reshape(aryPrfTc,
                           ((aryPrfTc.shape[0]
@@ -133,10 +121,6 @@ def find_prf_gpu(idxPrc, vecMdlXpos, vecMdlYpos, vecMdlSd, aryFunc,  #noqa
 
     # Boolean array for models with variance greater than zero:
     vecLgcVar = np.greater(vecVarPrfTc, varZero32)
-
-    # Original total number of pRF time course models (before removing models
-    # with zero variance):
-    varNumMdlsTtl = aryPrfTc.shape[0]
 
     # Take models with variance less than zero out of the array:
     aryPrfTc = aryPrfTc[vecLgcVar, :]
@@ -173,9 +157,6 @@ def find_prf_gpu(idxPrc, vecMdlXpos, vecMdlYpos, vecMdlSd, aryFunc,  #noqa
 
     # Number of voxels to be fitted:
     varNumVox = aryFunc.shape[0]
-
-    # Number of volumes:
-    # varNumVol = aryFunc.shape[1]
 
     # We reshape the voxel time courses, so that time goes down the column,
     # i.e. from top to bottom.
@@ -490,50 +471,18 @@ def find_prf_gpu(idxPrc, vecMdlXpos, vecMdlYpos, vecMdlSd, aryFunc,  #noqa
 
     print('------Post-processing results')
 
-    # Array for model parameters. At the moment, we have the indices of the
-    # best fitting models, so we need an array that tells us what model
-    # parameters these indices refer to.
-    aryMdl = np.zeros((varNumMdlsTtl, 3), dtype=np.float32)
-
     # Model parameter can be represented as float32 as well:
-    vecMdlXpos = vecMdlXpos.astype(np.float32)
-    vecMdlYpos = vecMdlYpos.astype(np.float32)
-    vecMdlSd = vecMdlSd.astype(np.float32)
-
-    # The first column is to contain model x positions:
-    aryMdl[:, 0] = np.repeat(vecMdlXpos, int(varNum2 * varNumPrfSizes))
-
-    # The second column is to contain model y positions:
-    aryMdl[:, 1] = np.repeat(
-                             np.tile(vecMdlYpos,
-                                     varNum1),
-                             varNumPrfSizes
-                             )
-
-    # The third column is to contain model pRF sizes:
-    aryMdl[:, 2] = np.tile(vecMdlSd, int(varNum1 * varNum2))
-
-    # The above code has the same result as the below (for better readability):
-    # aryMdl = np.zeros((varNumMdls, 3), dtype=np.float32)
-    # varCount = 0
-    # # Loop through pRF models:
-    # for idxX in range(0, varNum1):
-    #     for idxY in range(0, varNum2):
-    #         for idxSd in range(0, varNumPrfSizes):
-    #             aryMdl[varCount, 0] = vecMdlXpos[idxX]
-    #             aryMdl[varCount, 1] = vecMdlYpos[idxY]
-    #             aryMdl[varCount, 2] = vecMdlSd[idxSd]
-    #             varCount += 1
+    aryMdlParams = aryMdlParams.astype(np.float32)
 
     # Earlier, we had removed models with a variance of zero. Thus, those
     # models were ignored and are not present in the results. We remove them
     # from the model-parameter-array:
-    aryMdl = aryMdl[vecLgcVar]
+    aryMdlParams = aryMdlParams[vecLgcVar]
 
     # Retrieve model parameters of 'winning' model for all voxels:
-    vecBstXpos = aryMdl[:, 0][vecResSsMinIdx]
-    vecBstYpos = aryMdl[:, 1][vecResSsMinIdx]
-    vecBstSd = aryMdl[:, 2][vecResSsMinIdx]
+    vecBstXpos = aryMdlParams[:, 0][vecResSsMinIdx]
+    vecBstYpos = aryMdlParams[:, 1][vecResSsMinIdx]
+    vecBstSd = aryMdlParams[:, 2][vecResSsMinIdx]
 
     # Coefficient of determination (1 - ratio of (residual sum of squares by
     #  total sum of squares)):

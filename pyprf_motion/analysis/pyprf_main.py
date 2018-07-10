@@ -109,6 +109,14 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     if cfg.strVersion == 'gpu':
         cfg.varPar = 1
 
+    # Make sure that if gpu fitting is used, the number of cross-validations is
+    # set to 1, not higher
+    if cfg.strVersion == 'gpu':
+        strErrMsg = 'Stopping program. ' + \
+            'Cross-validation on GPU is currently not supported. ' + \
+            'Set varNumXval equal to 1 in csv file in order to continue. '
+        assert cfg.varNumXval == 1, strErrMsg
+
     # Get array with all possible model parameter combination:
     # [x positions, y positions, sigmas]
     aryMdlParams = crt_mdl_prms((int(cfg.varVslSpcSzeX),
@@ -141,7 +149,7 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     else:
         print("Please set number of crossvalidation folds (numXval) to 1 \
               (meaning no cross validation) or greater than 1 (meaning number \
-              of corss validation folds)")
+              of cross validation folds)")
 
     # CPU version (using numpy or cython for pRF finding):
     if ((cfg.strVersion == 'numpy') or (cfg.strVersion == 'cython')):

@@ -81,13 +81,13 @@ varVslSpcSzeY = 128
 
 # Path of functional data (needs to have same number of volumes as there are
 # PNGs):
-lstPathNiiFunc = ['/testing/exmpl_data_func_run01.nii.gz', '/testing/exmpl_data_func_run02.nii.gz', '/testing/exmpl_data_func_run03.nii.gz', '/testing/exmpl_data_func_run04.nii.gz']
+lstPathNiiFunc = ['/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/exmpl_data_func_run01.nii.gz', '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/exmpl_data_func_run02.nii.gz', '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/exmpl_data_func_run03.nii.gz', '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/exmpl_data_func_run04.nii.gz']
 
 # Path of mask (to restrict pRF model finding):
-strPathNiiMask = '/testing/exmpl_data_mask.nii.gz'
+strPathNiiMask = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/exmpl_data_mask.nii.gz'
 
 # Output basename:
-strPathOut = '/testing/result/pRF_test_results_cy_xval_pol'
+strPathOut = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/result/pRF_test_results_cy_xval_pol'
 
 # Which version to use for pRF finding. 'numpy' or 'cython' for pRF finding on
 # CPU, 'gpu' for using GPU.
@@ -101,7 +101,7 @@ switchHrfSet = 1
 # Should model fitting be based on k-fold cross-validation?
 # if desired, it is recommended to set this equal to the number of runs
 # if not, set to 1 and no cross-validation will be implemented
-# currently only supported for CPU
+# currently only supported for CPU, set to 1 if using GPU
 varNumXval = 4
 
 # Create pRF time course models?
@@ -111,10 +111,10 @@ lgcCrteMdl = False
 # be provided:
 
 # Name of the npy that holds spatial info about conditions
-strSptExpInf = '/testing/expInfo/sptInfo/arySptExpInf.npy'
+strSptExpInf = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/expInfo/sptInfo/arySptExpInf.npy'
 
 # Name of the npy that holds temporal info about conditions
-strTmpExpInf = '/testing/expInfo/tmpInfo/aryTmpExpInf.npy'
+strTmpExpInf = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/expInfo/tmpInfo/aryTmpExpInf.npy'
 
 # Factor by which time courses and HRF will be upsampled for the convolutions
 # Higher number might yield more accurate reults but also takes up more RAM.
@@ -122,4 +122,4 @@ varTmpOvsmpl = 20.
 
 # Path to npy file with pRF time course models (to save or load). Without file
 # extension.
-strPathMdl = '/testing/result/pRF_test_model_tc_pol'
+strPathMdl = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/result/pRF_test_model_tc_pol'
