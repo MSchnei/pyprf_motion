@@ -9,7 +9,7 @@ import numpy as np
 from setuptools import setup, Extension
 
 setup(name='pyprf_motion',
-      version='1.0.1',
+      version='1.0.2',
       description=('Population receptive field analysis for motion-sensitive \
                     early- and mid-level visual cortex.'),
       url='https://github.com/MSchnei/pyprf_motion',
