@@ -39,7 +39,7 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
         Array with pRF model time courses, with shape
         aryPrfTc[x-pos*y-pos*SD, number of volumes]
     aryMdlParams : np.array
-        2D array with all pRF model parameter combination.
+        2D array with all pRF model parameter combinations.
     strVersion : str
         Which version to use for pRF finding; 'numpy' or 'cython'.
     lgcXval: boolean
