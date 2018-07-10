@@ -105,7 +105,7 @@ switchHrfSet = 1
 varNumXval = 1
 
 # Create pRF time course models?
-lgcCrteMdl = False
+lgcCrteMdl = True
 
 # If we create new pRF time course models, the following parameters have to
 # be provided:

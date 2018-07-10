@@ -87,11 +87,11 @@ lstPathNiiFunc = ['/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis
 strPathNiiMask = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/exmpl_data_mask.nii.gz'
 
 # Output basename:
-strPathOut = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/result/pRF_test_results_np_noxval_crt'
+strPathOut = '/home/marian/Documents/Git/pyprf_motion/pyprf_motion/analysis/testing/result/pRF_test_results_tf_noxval_crt'
 
 # Which version to use for pRF finding. 'numpy' or 'cython' for pRF finding on
 # CPU, 'gpu' for using GPU.
-strVersion = 'numpy'
+strVersion = 'gpu'
 
 # Which hrf functions should be used?
 # 1: only canonical, 2: can and temp deriv, 3: can, temp and spat deriv
@@ -105,7 +105,7 @@ switchHrfSet = 1
 varNumXval = 1
 
 # Create pRF time course models?
-lgcCrteMdl = True
+lgcCrteMdl = False
 
 # If we create new pRF time course models, the following parameters have to
 # be provided:
