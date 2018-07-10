@@ -95,10 +95,7 @@ def model_creation(dicCnfg):
                                                int(cfg.varVslSpcSzeY)),
                                 aryMdlParams, cfg.varPar)
         del(arySptExpInf)
-#        print('------Save')
-#        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryMdlRsp',
-#                aryMdlRsp)
-#        print('------Done')
+
         # *********************************************************************
 
         # *********************************************************************
@@ -110,10 +107,6 @@ def model_creation(dicCnfg):
                               cfg.varNumVol, cfg.varTmpOvsmpl)
         del(aryTmpExpInf)
         del(aryMdlRsp)
-#        print('------Save')
-#        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryNrlTc',
-#                aryNrlTc)
-#        print('------Done')
 
         # *********************************************************************
 
@@ -127,16 +120,7 @@ def model_creation(dicCnfg):
                               (int(cfg.varVslSpcSzeX), int(cfg.varVslSpcSzeY)),
                               cfg.varPar)
         del(aryNrlTc)
-#        print('------Save')
-#        np.save('/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_MotLoc/aryPrfTc',
-#                aryPrfTc)
-#        print('------Done')
 
-        # *********************************************************************
-
-        # *********************************************************************
-        # Debugging feature:
-        # np.save('/home/john/Desktop/aryPixConv.npy', aryPixConv)
         # *********************************************************************
 
         # *********************************************************************
@@ -145,9 +129,15 @@ def model_creation(dicCnfg):
         print('------Save pRF time course models to disk')
 
         # The data will come out of the convolution process with an extra
-        # dimension, sinc ein principle different basis functions in addition
-        # to the canonical HRF can be used. But for now the modle fitting can
-        # only handle 1 canonical convolution, so we squeeze here for now.
+        # dimension, since in principle different basis functions in addition
+        # to the canonical HRF can be used. But for now the model fitting can
+        # only handle option 1 (canonical convolution). Therefore, we
+        # check that user has set the switchHrfSet in the csv file to 1
+        strErrMsg = 'Stopping program. ' + \
+            'Only canonical hrf fitting is currently supported. ' + \
+            'Set switchHrfSet equal to 1 in csv file in order to continue. '
+        assert cfg.switchHrfSet == 1, strErrMsg
+        # we reduce the dimensions by squeezing
         aryPrfTc = np.squeeze(aryPrfTc)
 
         # Save the 4D array as '*.npy' file:
