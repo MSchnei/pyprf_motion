@@ -114,7 +114,7 @@ lgcCrteMdl = True
 strSptExpInf = '/testing/expInfo/sptInfo/arySptExpInf.npy'
 
 # Name of the npy that holds temporal info about conditions
-strTmpExpInf = '/testing/tmpInfo/aryTmpExpInf.npy'
+strTmpExpInf = '/testing/expInfo/tmpInfo/aryTmpExpInf.npy'
 
 # Factor by which time courses and HRF will be upsampled for the convolutions
 # Higher number might yield more accurate reults but also takes up more RAM.
