@@ -10,21 +10,29 @@ On the analysis side, pyprf_motion offers some additional features made necessar
 ## Installation
 
 For installation, follow these steps:
+
 0. (Optional) Create conda environment
-> conda create -n env_pyprf_motion python=2.7
+```bash
+conda create -n env_pyprf_motion python=2.7
 source activate env_pyprf_motion
 conda install pip
+```
 
 1. Clone repository
-> git clone https://github.com/MSchnei/pyprf_motion.git
-> cd /path/to/cloned/pyprf_motion
+```bash
+git clone https://github.com/MSchnei/pyprf_motion.git
+cd /path/to/cloned/pyprf_motion
+```
 
 2. Install numpy, e.g. by running:
-> pip install numpy
+```bash
+pip install numpy
+```
 
 3. Install pyprf_motion with pip
-> pip install /path/to/cloned/pyprf_motion
-
+```bash
+pip install /path/to/cloned/pyprf_motion
+```
 
 ## Dependencies
 [**Python 2.7**](https://www.python.org/download/releases/2.7/)
