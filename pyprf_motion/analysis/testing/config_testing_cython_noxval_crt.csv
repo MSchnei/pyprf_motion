@@ -68,7 +68,7 @@ varNumVol = 1232
 varSdSmthTmp = 0.0
 
 # Number of processes to run in parallel:
-varPar = 10
+varPar = 3
 
 # Size of visual space model in which the pRF models are
 # created (x- and y-dimension). The x and y dimensions specified here need to
@@ -81,13 +81,13 @@ varVslSpcSzeY = 128
 
 # Path of functional data (needs to have same number of volumes as there are
 # PNGs):
-lstPathNiiFunc = ['~/fnc01.nii', '~/fnc02.nii', '~/fnc03.nii', '~/fnc04.nii']
+lstPathNiiFunc = ['/testing/exmpl_data_func_run01.nii.gz', '/testing/exmpl_data_func_run02.nii.gz', '/testing/exmpl_data_func_run03.nii.gz', '/testing/exmpl_data_func_run04.nii.gz']
 
 # Path of mask (to restrict pRF model finding):
-strPathNiiMask = '~/mask.nii'
+strPathNiiMask = '/testing/exmpl_data_mask.nii.gz'
 
 # Output basename:
-strPathOut = '~/pRF_results/pRF_results'
+strPathOut = '/testing/result/pRF_test_results_cy_noxval_crt'
 
 # Which version to use for pRF finding. 'numpy' or 'cython' for pRF finding on
 # CPU, 'gpu' for using GPU.
@@ -102,7 +102,7 @@ switchHrfSet = 1
 # if desired, it is recommended to set this equal to the number of runs
 # if not, set to 1 and no cross-validation will be implemented
 # currently only supported for CPU
-varNumXval = 4
+varNumXval = 1
 
 # Create pRF time course models?
 lgcCrteMdl = True
@@ -111,10 +111,10 @@ lgcCrteMdl = True
 # be provided:
 
 # Name of the npy that holds spatial info about conditions
-strSptExpInf = '~/expInfo/sptInfo/arySptExpInf.npy'
+strSptExpInf = '/testing/expInfo/sptInfo/arySptExpInf.npy'
 
 # Name of the npy that holds temporal info about conditions
-strTmpExpInf = '~/expInfo/tmpInfo/aryTmpExpInf.npy'
+strTmpExpInf = '/testing/tmpInfo/aryTmpExpInf.npy'
 
 # Factor by which time courses and HRF will be upsampled for the convolutions
 # Higher number might yield more accurate reults but also takes up more RAM.
@@ -122,4 +122,4 @@ varTmpOvsmpl = 20.
 
 # Path to npy file with pRF time course models (to save or load). Without file
 # extension.
-strPathMdl = '~/pRF_results/pRF_model_tc'
+strPathMdl = '/testing/result/pRF_test_model_tc_crt'
