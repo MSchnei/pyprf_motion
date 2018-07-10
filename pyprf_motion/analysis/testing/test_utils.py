@@ -3,9 +3,9 @@
 import os
 from os.path import isfile, join
 import numpy as np
-from pyprf.analysis import pyprf_main
-from pyprf.analysis import utilities as util
-from pyprf.analysis.cython_leastsquares_setup_call import setup_cython
+from pyprf_motion.analysis import pyprf_main
+from pyprf_motion.analysis import utils_general as util
+from pyprf_motion.analysis.cython_leastsquares_setup_call import setup_cython
 
 # Compile cython code:
 setup_cython()
@@ -15,7 +15,7 @@ strDir = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_main():
-    """Run main pyprf function and compare results with template."""
+    """Run main pyprf_motion function and compare results with template."""
     # --------------------------------------------------------------------------
     # *** Preparations
 
@@ -36,7 +36,7 @@ def test_main():
     # Path of config file for tests:
     strCsvCnfgNp = (strDir + '/config_testing_numpy.csv')
 
-    # Call main pyprf function:
+    # Call main pyprf_motion function:
     pyprf_main.pyprf(strCsvCnfgNp, lgcTest=True)
 
     # Load result:
@@ -57,7 +57,7 @@ def test_main():
     # Path of config file for tests:
     strCsvCnfgCy = (strDir + '/config_testing_cython.csv')
 
-    # Call main pyprf function:
+    # Call main pyprf_motion function:
     pyprf_main.pyprf(strCsvCnfgCy, lgcTest=True)
 
     # Load result:
@@ -78,7 +78,7 @@ def test_main():
     # Path of config file for tests:
     strCsvCnfgTf = (strDir + '/config_testing_tensorflow.csv')
 
-    # Call main pyprf function:
+    # Call main pyprf_motion function:
     pyprf_main.pyprf(strCsvCnfgTf, lgcTest=True)
 
     # Load result:
