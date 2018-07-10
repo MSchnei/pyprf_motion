@@ -7,6 +7,25 @@ This is an extension of the [pyprf package](https://github.com/ingo-m/pypRF).
 Compared to pyprf, pyprf_motion offers stimuli that were specifically optimized to elicit responses from motion-sensitive areas.
 On the analysis side, pyprf_motion offers some additional features made necessary by the different stimulation type (model positions defined in polar coordinates, sub-TR temporal resolution for model creation, cross-validation for model fitting) at the cost of some speed and flexibility. There is currently no support for GPU.
 
+## Installation
+
+For installation, follow these steps:
+0. (Optional) Create conda environment
+> conda create -n env_pyprf_motion python=2.7
+source activate env_pyprf_motion
+conda install pip
+
+1. Clone repository
+> git clone https://github.com/MSchnei/pyprf_motion.git
+> cd /path/to/cloned/pyprf_motion
+
+2. Install numpy, e.g. by running:
+> pip install numpy
+
+3. Install pyprf_motion with pip
+> pip install /path/to/cloned/pyprf_motion
+
+
 ## Dependencies
 [**Python 2.7**](https://www.python.org/download/releases/2.7/)
 
