@@ -8,8 +8,12 @@ For development installation:
 import numpy as np
 from setuptools import setup, Extension
 
+# pypi needs a description which we load here
+with open('README.rst') as f:
+    long_description = f.read()
+
 setup(name='pyprf_motion',
-      version='1.0.2',
+      version='1.0.3',
       description=('Population receptive field analysis for motion-sensitive \
                     early- and mid-level visual cortex.'),
       url='https://github.com/MSchnei/pyprf_motion',
@@ -21,6 +25,7 @@ setup(name='pyprf_motion',
                         'scikit-learn==0.19.1'],
       # setup_requires=['numpy'],
       keywords=['pRF', 'fMRI', 'retinotopy'],
+      long_description=long_description,
       packages=['pyprf_motion.analysis'],
       py_modules=['pyprf_motion.analysis'],
       entry_points={
