@@ -1,5 +1,5 @@
 """
-pyprf setup.
+pyprf_motion setup.
 
 For development installation:
     pip install -e /path/to/pRF_mapping
