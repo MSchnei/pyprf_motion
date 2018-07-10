@@ -93,11 +93,12 @@ strVersion = 'cython'
 
 # which hrf functions should be used?
 # 1: only canonical, 2: can and temp deriv, 3: can, temp and spat deriv
-# for model fitting, currently only option 1 is supported
+# Note: Currently only option 1 (canonical hrf) is supported
 switchHrfSet = 1
 
 # should model fitting be based on k-fold cross-validation?
-# if not, set to 1
+# if desired, it is recommended to set this equal to the number of runs
+# if not, set to 1 and no cross-validation will be implemented
 # currently only supported for CPU
 varNumXval = 4
 
