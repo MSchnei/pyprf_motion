@@ -102,13 +102,6 @@ def find_prf_gpu(idxPrc, aryMdlParams, aryFunc, aryPrfTc, queOut):
 
     print('------Prepare pRF model time courses for graph')
 
-    # Reshape pRF model time courses:
-    aryPrfTc = np.reshape(aryPrfTc,
-                          ((aryPrfTc.shape[0]
-                            * aryPrfTc.shape[1]
-                            * aryPrfTc.shape[2]),
-                           aryPrfTc.shape[3]))
-
     # Change type to float 32:
     aryPrfTc = aryPrfTc.astype(np.float32)
 
@@ -127,11 +120,6 @@ def find_prf_gpu(idxPrc, aryMdlParams, aryFunc, aryPrfTc, queOut):
 
     # Add extra dimension for constant term:
     aryPrfTc = np.reshape(aryPrfTc, (aryPrfTc.shape[0], aryPrfTc.shape[1], 1))
-
-    # Add constant term (ones):
-    aryPrfTc = np.concatenate((aryPrfTc,
-                               np.ones(aryPrfTc.shape).astype(np.float32)),
-                              axis=2)
 
     # Size of pRF time courses in MB:
     varSzePrf = np.divide(float(aryPrfTc.nbytes),
