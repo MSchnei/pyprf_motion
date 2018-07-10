@@ -262,6 +262,8 @@ def load_config(strCsvCnfg, lgcTest=False):
         dicCnfg['strPathNiiMask'] = (strDir + dicCnfg['strPathNiiMask'])
         dicCnfg['strPathOut'] = (strDir + dicCnfg['strPathOut'])
         dicCnfg['strPathMdl'] = (strDir + dicCnfg['strPathMdl'])
+        dicCnfg['strSptExpInf'] = (strDir + dicCnfg['strSptExpInf'])
+        dicCnfg['strTmpExpInf'] = (strDir + dicCnfg['strTmpExpInf'])
 
         # Loop through functional runs:
         varNumRun = len(dicCnfg['lstPathNiiFunc'])
