@@ -3,6 +3,7 @@
 import os
 from os.path import isfile, join
 import numpy as np
+from pyprf_motion.analysis.load_config import load_config
 from pyprf_motion.analysis.model_creation_main import model_creation
 from pyprf_motion.analysis import pyprf_main
 from pyprf_motion.analysis import utils_general as util
@@ -34,8 +35,11 @@ def test_model_creation():
     # Path of config file for tests:
     strCsvCnfgCrtMdl = (strDir + '/config_testing_crt_model.csv')
 
+    # Load config parameters from csv file into dictionary:
+    dicCnfg = load_config(strCsvCnfgCrtMdl, lgcTest=True)
+
     # Call function for model creation:
-    model_creation(strCsvCnfgCrtMdl)
+    model_creation(dicCnfg)
 
     # Load test result:
     mdlTestCrt = np.load(
@@ -62,8 +66,11 @@ def test_model_creation():
     # Path of config file for tests:
     strCsvCnfgPolMdl = (strDir + '/config_testing_pol_model.csv')
 
+    # Load config parameters from csv file into dictionary:
+    dicCnfg = load_config(strCsvCnfgPolMdl, lgcTest=True)
+
     # Call function for model creation:
-    model_creation(strCsvCnfgPolMdl)
+    model_creation(dicCnfg)
 
     # Load test result:
     mdlTestPol = np.load(
@@ -100,6 +107,24 @@ def test_model_creation():
 
 def test_model_fitting():
     """Run main pyprf_motion function and compare results with template."""
+    # --------------------------------------------------------------------------
+    # *** Put template models in results folder for use in model fitting
+
+    # Load template model for crt coordinates:
+    mdlTmplCrt = np.load(
+            strDir + '/pRF_tmpl_model_tc_crt.npz')
+    mdlTmplCrt = mdlTmplCrt['model']
+
+    # save template model in results folder as test model
+    np.save(strDir + '/result/' + '/pRF_test_model_tc_crt.npz', mdlTmplCrt)
+
+    # Load template model for pol coordinates:
+    mdlTmplPol = np.load(
+            strDir + '/pRF_tmpl_model_tc_pol.npz')
+    mdlTmplPol = mdlTmplPol['model']
+
+    # save template model in results folder as test model
+    np.save(strDir + '/result/' + '/pRF_test_model_tc_pol.npz', mdlTmplPol)
 
     # --------------------------------------------------------------------------
     # *** Test numpy version, no cross-validation, cartesian coordinates
