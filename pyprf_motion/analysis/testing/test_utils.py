@@ -3,6 +3,7 @@
 import os
 from os.path import isfile, join
 import numpy as np
+from pyprf_motion.analysis.model_creation_main import model_creation
 from pyprf_motion.analysis import pyprf_main
 from pyprf_motion.analysis import utils_general as util
 from pyprf_motion.analysis.cython_leastsquares_setup_call import setup_cython
@@ -17,7 +18,87 @@ strDir = os.path.dirname(os.path.abspath(__file__))
 varRnd = 3
 
 
-def test_main():
+def test_model_creation():
+
+    # --------------------------------------------------------------------------
+    # *** Test model creation, cartesian coordinates
+
+    # Load template model:
+    mdlTmplCrt = np.load(
+            strDir + '/pRF_tmpl_model_tc_crt.npz')
+    mdlTmplCrt = mdlTmplCrt['model']
+
+    # Round template results:
+    mdlTmplCrt = np.around(mdlTmplCrt.astype(np.float32), decimals=varRnd)
+
+    # Path of config file for tests:
+    strCsvCnfgCrtMdl = (strDir + '/config_testing_crt_model.csv')
+
+    # Call function for model creation:
+    model_creation(strCsvCnfgCrtMdl)
+
+    # Load test result:
+    mdlTestCrt = np.load(
+            strDir + '/result/' + 'pRF_test_model_tc_crt.npy')
+
+    # Round test results:
+    mdlTestCrt = np.around(mdlTestCrt.astype(np.float32), decimals=varRnd)
+
+    # Test whether the template and test models correspond:
+    lgcTestTmplCrt = np.array_equal(mdlTmplCrt, mdlTestCrt)
+    # --------------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
+    # *** Test model creation, polar coordinates
+
+    # Load template model:
+    mdlTmplPol = np.load(
+            strDir + '/pRF_tmpl_model_tc_pol.npz')
+    mdlTmplPol = mdlTmplPol['model']
+
+    # Round template results:
+    mdlTmplPol = np.around(mdlTmplPol.astype(np.float32), decimals=varRnd)
+
+    # Path of config file for tests:
+    strCsvCnfgPolMdl = (strDir + '/config_testing_pol_model.csv')
+
+    # Call function for model creation:
+    model_creation(strCsvCnfgPolMdl)
+
+    # Load test result:
+    mdlTestPol = np.load(
+            strDir + '/result/' + 'pRF_test_model_tc_pol.npy')
+
+    # Round test results:
+    mdlTestPol = np.around(mdlTestPol.astype(np.float32), decimals=varRnd)
+
+    # Test whether the template and test models correspond:
+    lgcTestTmplPol = np.array_equal(mdlTmplPol, mdlTestPol)
+    # --------------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
+    # *** Clean up
+
+    # Path of directory with results:
+    strDirRes = strDir + '/result/'
+
+    # Get list of files in results directory:
+    lstFls = [f for f in os.listdir(strDirRes) if isfile(join(strDirRes, f))]
+
+    # Delete results of test:
+    for strTmp in lstFls:
+        if '.nii' in strTmp:
+            # print(strTmp)
+            os.remove((strDirRes + '/' + strTmp))
+        elif '.npy' in strTmp:
+            # print(strTmp)
+            os.remove((strDirRes + '/' + strTmp))
+    # --------------------------------------------------------------------------
+    assert (lgcTestTmplCrt and
+            lgcTestTmplPol)
+
+
+def test_model_fitting():
     """Run main pyprf_motion function and compare results with template."""
 
     # --------------------------------------------------------------------------
