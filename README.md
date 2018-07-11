@@ -69,8 +69,13 @@ The stimulus setup should look like the following screen-shot:
 
 ### 2. Prepare spatial and temporal information for experiment as arrays
 1. Run prepro_get_spat_info.py in the prepro folder to obtain an array with the spatial information of the experiment.
+   This should result in a 3d numpy array with shape [pixel x pixel x nr of spatial aperture conditions] that represents
+   images of the spatial apertures stacked on top of each other.
 
 2. Run prepro_get_temp_info.py in the prepro folder to obtain an array with the temporal information of the experiment.
+   This should result in a 2d numpy array with shape [nr of volumes across all runs x 3]. The first column represents
+   unique identifiers of spatial aperture conditions. The second column represents onset times and the third durations
+   (both in s).
 
 ### 3. Prepare the input data
 The input data should be motion-corrected, high-pass filtered and (optionally) distortion-corrected.
