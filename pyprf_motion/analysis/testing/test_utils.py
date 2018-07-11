@@ -116,7 +116,7 @@ def test_model_fitting():
     mdlTmplCrt = mdlTmplCrt['model']
 
     # save template model in results folder as test model
-    np.save(strDir + '/result/' + '/pRF_test_model_tc_crt.npz', mdlTmplCrt)
+    np.save(strDir + '/result/' + '/pRF_test_model_tc_crt', mdlTmplCrt)
 
     # Load template model for pol coordinates:
     mdlTmplPol = np.load(
@@ -124,7 +124,7 @@ def test_model_fitting():
     mdlTmplPol = mdlTmplPol['model']
 
     # save template model in results folder as test model
-    np.save(strDir + '/result/' + '/pRF_test_model_tc_pol.npz', mdlTmplPol)
+    np.save(strDir + '/result/' + '/pRF_test_model_tc_pol', mdlTmplPol)
 
     # --------------------------------------------------------------------------
     # *** Test numpy version, no cross-validation, cartesian coordinates
