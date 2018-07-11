@@ -23,13 +23,13 @@ strKwCrd = 'pol'
 # Number of x- or radial positions to model:
 # If strKwCrd is crt: this corresponds to number of x-positions
 # elif strKwCrd is pol: this corresponds to number of radial positions
-varNum1 = 67
+varNum1 = 40
 # Number of y- or angular positions to model:
 # If strKwCrd is crt: this corresponds to number of y-positions
 # elif strKwCrd is pol: this corresponds to number of angular positions
-varNum2 = 67
+varNum2 = 40
 # Number of pRF sizes to model:
-varNumPrfSizes = 40
+varNumPrfSizes = 30
 
 # Extent of visual space from centre of the screen in negative x-direction
 # (i.e. from the fixation point to the left end of the screen) in degrees of
