@@ -152,7 +152,7 @@ def map_pol_to_crt(aryTht, aryRad):
 
 def rmp_rng(aryVls, varNewMin, varNewMax, varOldThrMin=None,
             varOldAbsMax=None):
-    """Remap values in an array from
+    """Remap values in an array from one range to another.
 
     Parameters
     ----------
