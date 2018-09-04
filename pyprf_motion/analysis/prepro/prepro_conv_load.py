@@ -10,7 +10,7 @@ varNumVol = 1232
 
 # Parent directory of PNG files. PNG files need to be organsied in
 # numerical order (e.g. `file_001.png`, `file_002.png`, etc.).
-strPathPng = ''
+strPathPng = '/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_motLoc/expInfo/sptInfo/'
 
 # Pixel size (x, y) at which PNGs are sampled. In case of large PNGs it
 # is useful to sample at a lower than the original resolution.
@@ -31,7 +31,7 @@ strPthEv = ''
 
 
 # %% define convenience functions
-def load_png(varNumVol, strPathPng, tplVslSpcSze=(200, 200), varStrtIdx=0,
+def load_png(varNumVol, strPathPng, tplVslSpcSze=(128, 128), varStrtIdx=0,
              varZfill=3):
     """
     Load PNGs with stimulus information for pRF model creation.
