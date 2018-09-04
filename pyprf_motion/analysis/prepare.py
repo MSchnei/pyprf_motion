@@ -32,8 +32,8 @@ def funcSmthTmp(aryPrfTc, varSdSmthTmp):
         dimensions: `aryPrfTc[x-position, y-position, SD, volume]`.
     varSdSmthTmp : float, positive
         Extent of temporal smoothing that is applied to functional data and
-        pRF time course models, [SD of Gaussian kernel, in seconds]. If
-        `zero`, no temporal smoothing is applied.
+        pRF time course models, [SD of Gaussian kernel, in units of data array,
+        i.e. TR].
 
     Returns
     -------
@@ -79,16 +79,17 @@ def prep_models(aryPrfTc, varSdSmthTmp=1.0):
         `aryPrfTc[x-position, y-position, SD, volume]`.
     varSdSmthTmp : float
         Extent of temporal smoothing that is applied to functional data and
-        pRF time course models, [SD of Gaussian kernel, in seconds]. If `zero`,
-        no temporal smoothing is applied.
-
+        pRF time course models, [SD of Gaussian kernel, in units of data array,
+        i.e. TR]. If 'zero', no temporal smoothing is applied.
 
     Returns
     -------
     aryPrfTc : np.array
         4D numpy array with prepared pRF time course models, same
-        dimensions as input (`aryPrfTc[x-position, y-position, SD, volume]`).
+        dimensions as input ('aryPrfTc[x-position, y-position, SD, volume]').
+
     """
+
     print('------Prepare pRF time course models')
 
     # Perform temporal smoothing of pRF time course models
