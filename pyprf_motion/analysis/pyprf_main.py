@@ -29,7 +29,7 @@ from pyprf_motion.analysis.model_creation_utils import crt_mdl_prms
 from pyprf_motion.analysis.prepare import prep_models, prep_func
 
 ###### DEBUGGING ###############
-#strCsvCnfg = "/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/04_motDepPrf/pRF_results/S02_config_motDepPrf_flck.csv"
+#strCsvCnfg = "/media/sf_D_DRIVE/MotDepPrf/Analysis/S10/03_motLoc/pRF_results/S10_config_MotLoc_tmpSmth.csv"
 #lgcTest = False
 ################################
 
