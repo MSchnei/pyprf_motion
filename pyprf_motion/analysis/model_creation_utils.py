@@ -134,7 +134,7 @@ def crt_mdl_prms(tplPngSize, varNum1, varExtXmin,  varExtXmax, varNum2,
     # columns correspond to: (1) the x-position, (2) the y-position, and
     # (3) the standard deviation. The parameters are in units of the
     # upsampled visual space.
-    aryMdlParams = np.zeros((varNumMdls, 3), dtype=np.float32)
+    aryMdlParams = np.zeros((varNumMdls, 3), dtype=np.float64)
 
     # Counter for parameter array:
     varCntMdlPrms = 0
@@ -199,7 +199,7 @@ def crt_mdl_prms(tplPngSize, varNum1, varExtXmin,  varExtXmax, varNum2,
         # of output
         aryRad, aryTht = np.meshgrid(vecRad, vecTht, indexing='ij')
 
-        # faltten arrays to be able to combine them with meshgrid
+        # flatten arrays to be able to combine them with meshgrid
         vecRad = aryRad.flatten()
         vecTht = aryTht.flatten()
 
