@@ -144,8 +144,8 @@ def map_pol_to_crt(aryTht, aryRad):
         Array with y coordinate values.
     """
 
-    aryXCrds = aryRad * np.cos(aryTht)
-    aryYrds = aryRad * np.sin(aryTht)
+    aryXCrds = np.multiply(aryRad, np.cos(aryTht))
+    aryYrds = np.multiply(aryRad, np.sin(aryTht))
 
     return aryXCrds, aryYrds
 
