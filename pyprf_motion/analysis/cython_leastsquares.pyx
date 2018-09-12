@@ -179,8 +179,8 @@ cpdef np.ndarray[np.float32_t, ndim=2] cy_lst_sq_xval(
     Returns
     -------
     aryResXval : np.array
-        2D numpy array with cross validation error for all voxels in the chunk of
-        functional data and all cross validation folds.
+        2D numpy array with cross validation error for all voxels in the chunk
+        of functional data and all cross validation folds.
         Dimensionality: aryResXval[voxel, varNumXval]
 
     Notes
