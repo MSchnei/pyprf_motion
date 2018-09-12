@@ -110,9 +110,6 @@ def prep_models(aryPrfTc, varSdSmthTmp=1.0):
     aryTmpLgc = np.greater(aryTmpStd, np.array([0.0]))
     aryPrfTc[aryTmpLgc, :] = np.divide(aryPrfTc[aryTmpLgc, :],
                                        aryTmpStd[aryTmpLgc, None])
-    # Compress the prf time course models
-    print('---------Compress the pRF time course models')
-    aryPrfTc = np.power(aryPrfTc, 0.2)
 
     return aryPrfTc
 
