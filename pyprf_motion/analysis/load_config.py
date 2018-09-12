@@ -139,6 +139,11 @@ def load_config(strCsvCnfg, lgcTest=False):
     if lgcPrint:
         print('---Maximum pRF model size: ' + str(dicCnfg['varPrfStdMax']))
 
+    # Exponent for compression or expansion of model responses
+    dicCnfg['varExp'] = float(dicCnfg['varExp'])
+    if lgcPrint:
+        print('---Exponent for responses: ' + str(dicCnfg['varExp']))
+
     # Volume TR of input data [s]:
     dicCnfg['varTr'] = float(dicCnfg['varTr'])
     if lgcPrint:

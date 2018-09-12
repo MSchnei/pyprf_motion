@@ -104,6 +104,16 @@ def model_creation(dicCnfg):
         # *********************************************************************
 
         # *********************************************************************
+        # *** Compress the model responses
+
+        # This will make small responses close to 0 larger by a lot and will
+        # make large responses close to 1 larger by a bit
+        print('------Compress the model responses')
+        aryMdlRsp = np.power(aryMdlRsp, cfg.varExp)
+
+        # *********************************************************************
+
+        # *********************************************************************
         # *** Create neural time courses in upsampled space
 
         print('------Create temporally upsampled neural time courses')

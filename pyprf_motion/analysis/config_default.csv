@@ -53,6 +53,10 @@ varExtYmax = 12.0
 varPrfStdMin = 0.2
 varPrfStdMax = 14.0
 
+# Exponent for compression or expansion of model responses
+# Set to 1.0 if no compression/expansion should be applied
+varExp = 1.0
+
 # Volume TR of input data [s]:
 varTr = 2.0
 
