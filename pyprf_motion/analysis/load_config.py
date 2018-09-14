@@ -1,9 +1,26 @@
 # -*- coding: utf-8 -*-
 """Load py_pRF_mapping config file."""
 
+# Part of pyprf_motion library
+# Copyright (C) 2018  Marian Schneider, Ingo Marquardt
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import os
 import csv
 import ast
+import numpy as np
 
 # Get path of this file:
 strDir = os.path.dirname(os.path.abspath(__file__))
@@ -139,10 +156,11 @@ def load_config(strCsvCnfg, lgcTest=False):
     if lgcPrint:
         print('---Maximum pRF model size: ' + str(dicCnfg['varPrfStdMax']))
 
-    # Exponent for compression or expansion of model responses
-    dicCnfg['varExp'] = float(dicCnfg['varExp'])
+    # List of exponents for compression or expansion of model responses
+    dicCnfg['lstExp'] = ast.literal_eval(dicCnfg['lstExp'])
+    dicCnfg['lstExp'] = [float(i) for i in dicCnfg['lstExp']]
     if lgcPrint:
-        print('---Exponent for responses: ' + str(dicCnfg['varExp']))
+        print('---Exponents for nonlinearity: ' + str(dicCnfg['lstExp']))
 
     # Volume TR of input data [s]:
     dicCnfg['varTr'] = float(dicCnfg['varTr'])

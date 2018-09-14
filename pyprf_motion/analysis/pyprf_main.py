@@ -19,17 +19,17 @@
 
 import time
 import numpy as np
-import nibabel as nb
 import multiprocessing as mp
 
 from pyprf_motion.analysis.load_config import load_config
-from pyprf_motion.analysis.utils_general import cls_set_config
+from pyprf_feature.analysis.utils_general import (cls_set_config, export_nii,
+                                                  joinRes)
 from pyprf_motion.analysis.model_creation_main import model_creation
 from pyprf_motion.analysis.model_creation_utils import crt_mdl_prms
 from pyprf_motion.analysis.prepare import prep_models, prep_func
 
 ###### DEBUGGING ###############
-#strCsvCnfg = "/media/sf_D_DRIVE/MotDepPrf/Analysis/S10/03_motLoc/pRF_results/S10_config_MotLoc_tmpSmth.csv"
+#strCsvCnfg = "/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_motLoc/pRF_results/S02_config_MotLoc_lstCmpr.csv"
 #lgcTest = False
 ################################
 
@@ -45,14 +45,12 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
         Whether this is a test (pytest). If yes, absolute path of pyprf libary
         will be prepended to config file paths.
     """
-    # *************************************************************************
-    # *** Check time
+
+    # %% Check time
     print('---pRF analysis')
     varTme01 = time.time()
-    # *************************************************************************
 
-    # *************************************************************************
-    # *** Preparations
+    # %% Preparations
 
     # Load config parameters from csv file into dictionary:
     dicCnfg = load_config(strCsvCnfg, lgcTest=lgcTest)
@@ -69,16 +67,11 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     # Convert preprocessing parameters (for temporal smoothing)
     # from SI units (i.e. [s]) into units of data array (volumes):
     cfg.varSdSmthTmp = np.divide(cfg.varSdSmthTmp, cfg.varTr)
-    # *************************************************************************
 
-    # *************************************************************************
-    # *** Create or load pRF time course models
-
+    # Create or load pRF time course models
     aryPrfTc = model_creation(dicCnfg)
-    # *************************************************************************
 
-    # *************************************************************************
-    # *** Preprocessing
+    # %% Preprocessing
 
     # The model time courses will be preprocessed such that they are smoothed
     # (temporally) with same factor as the data and that they will be z-scored:
@@ -92,10 +85,7 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     # will be saved in this precision later
     hdrMsk.set_data_dtype(np.float32)
 
-    # *************************************************************************
-
-    # *************************************************************************
-    # *** Find pRF models for voxel time courses
+    # %% Find pRF models for voxel time courses
 
     print('------Find pRF models for voxel time courses')
 
@@ -129,7 +119,7 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
                                 cfg.varExtXmin, cfg.varExtXmax, cfg.varNum2,
                                 cfg.varExtYmin, cfg.varExtYmax,
                                 cfg.varNumPrfSizes, cfg.varPrfStdMin,
-                                cfg.varPrfStdMax, kwUnt='deg',
+                                cfg.varPrfStdMax, cfg.lstExp, kwUnt='deg',
                                 kwCrd=cfg.strKwCrd)
 
     # Empty list for results (parameters of best fitting pRF model):
@@ -211,153 +201,75 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     for idxPrc in range(0, cfg.varPar):
         lstPrcs[idxPrc].join()
 
+    # %% Sort and prepare output from model fitting
     print('---------Prepare pRF finding results for export')
 
     # Put output into correct order:
     lstPrfRes = sorted(lstPrfRes)
 
-    # Concatenate output vectors:
-    aryBstXpos = np.zeros(0)
-    aryBstYpos = np.zeros(0)
-    aryBstSd = np.zeros(0)
-    aryBstR2 = np.zeros(0)
-    for idxRes in range(0, cfg.varPar):
-        aryBstXpos = np.append(aryBstXpos, lstPrfRes[idxRes][1])
-        aryBstYpos = np.append(aryBstYpos, lstPrfRes[idxRes][2])
-        aryBstSd = np.append(aryBstSd, lstPrfRes[idxRes][3])
-        aryBstR2 = np.append(aryBstR2, lstPrfRes[idxRes][4])
-
-    # Concatenate output arrays for R2 maps (saved for every run):
+    # collect results from parallelization
+    aryBstXpos = joinRes(lstPrfRes, cfg.varPar, 1, inFormat='1D')
+    aryBstYpos = joinRes(lstPrfRes, cfg.varPar, 2, inFormat='1D')
+    aryBstSd = joinRes(lstPrfRes, cfg.varPar, 3, inFormat='1D')
+    aryBstExp = joinRes(lstPrfRes, cfg.varPar, 4, inFormat='1D')
+    aryBstR2 = joinRes(lstPrfRes, cfg.varPar, 5, inFormat='1D')
     if np.greater(cfg.varNumXval, 1):
-        lstBstR2Single = []
-        for idxRes in range(0, cfg.varPar):
-            lstBstR2Single.append(lstPrfRes[idxRes][5])
-        aryBstR2Single = np.concatenate(lstBstR2Single, axis=0)
-        del(lstBstR2Single)
+        aryBstR2Single = joinRes(lstPrfRes, cfg.varPar, 6, inFormat='2D')
 
-    # Delete unneeded large objects:
-    del(lstPrfRes)
-
-    # Put results form pRF finding into array (they originally needed to be
-    # saved in a list due to parallelisation). Voxels were selected for pRF
-    # model finding in two stages: First, a mask was applied. Second, voxels
-    # with low variance were removed. Voxels are put back into the original
-    # format accordingly.
-
-    # Number of voxels that were included in the mask:
-    varNumVoxMsk = np.sum(aryLgcMsk)
-
-    # Array for pRF finding results, of the form aryPrfRes[voxel-count, 0:3],
-    # where the 2nd dimension contains the parameters of the best-fitting pRF
-    # model for the voxel, in the order (0) pRF-x-pos, (1) pRF-y-pos, (2)
-    # pRF-SD, (3) pRF-R2. At this step, only the voxels included in the mask
-    # are represented.
-    aryPrfRes01 = np.zeros((varNumVoxMsk, 6), dtype=np.float32)
-
-    # Place voxels based on low-variance exlusion:
-    aryPrfRes01[aryLgcVar, 0] = aryBstXpos
-    aryPrfRes01[aryLgcVar, 1] = aryBstYpos
-    aryPrfRes01[aryLgcVar, 2] = aryBstSd
-    aryPrfRes01[aryLgcVar, 3] = aryBstR2
-
-    # Total number of voxels:
-    varNumVoxTlt = (tplNiiShp[0] * tplNiiShp[1] * tplNiiShp[2])
-
-    # Place voxels based on mask-exclusion:
-    aryPrfRes02 = np.zeros((varNumVoxTlt, 6), dtype=np.float32)
-    aryPrfRes02[aryLgcMsk, 0] = aryPrfRes01[:, 0]
-    aryPrfRes02[aryLgcMsk, 1] = aryPrfRes01[:, 1]
-    aryPrfRes02[aryLgcMsk, 2] = aryPrfRes01[:, 2]
-    aryPrfRes02[aryLgcMsk, 3] = aryPrfRes01[:, 3]
-
-    # Reshape pRF finding results into original image dimensions:
-    aryPrfRes = np.reshape(aryPrfRes02,
-                           [tplNiiShp[0],
-                            tplNiiShp[1],
-                            tplNiiShp[2],
-                            6])
-
-    del(aryPrfRes01)
-    del(aryPrfRes02)
+    # %% Calculate polar angle and eccentricity
 
     # Calculate polar angle map:
-    aryPrfRes[..., 4] = np.arctan2(aryPrfRes[..., 1], aryPrfRes[..., 0])
-
+    aryPlrAng = np.arctan2(aryBstYpos, aryBstXpos)
     # Calculate eccentricity map (r = sqrt( x^2 + y^2 ) ):
-    aryPrfRes[..., 5] = np.sqrt(np.add(np.square(aryPrfRes[..., 0]),
-                                       np.square(aryPrfRes[..., 1])))
+    aryEcc = np.sqrt(np.add(np.square(aryBstXpos),
+                            np.square(aryBstYpos)))
+
+    # %% Export each map of best parameters as a 3D nii file
+
+    print('---------Exporting results')
+
+    # Xoncatenate all the best voxel maps
+    aryBstMaps = np.stack([aryBstXpos, aryBstYpos, aryBstSd, aryBstExp,
+                           aryBstR2, aryPlrAng, aryEcc], axis=1)
 
     # List with name suffices of output images:
     lstNiiNames = ['_x_pos',
                    '_y_pos',
                    '_SD',
+                   '_exp',
                    '_R2',
                    '_polar_angle',
                    '_eccentricity']
 
-    print('---------Exporting results')
+    # Create full path names from nii file names and output path
+    lstNiiNames = [cfg.strPathOut + strNii + '.nii.gz' for strNii in
+                   lstNiiNames]
 
-    # Save nii results:
-    for idxOut in range(0, 6):
-        # Create nii object for results:
-        niiOut = nb.Nifti1Image(aryPrfRes[..., idxOut],
-                                aryAff,
-                                header=hdrMsk
-                                )
-        # Save nii:
-        strTmp = (cfg.strPathOut + lstNiiNames[idxOut] + '.nii.gz')
-        nb.save(niiOut, strTmp)
+    # export map results as seperate 3D nii files
+    export_nii(aryBstMaps, lstNiiNames, aryLgcMsk, aryLgcVar, tplNiiShp,
+               aryAff, hdrMsk, outFormat='3D')
 
-    # *************************************************************************
+    # %% Save R2 maps from crossvalidation (saved for every run) as nii:
 
-    # *************************************************************************
-    # Save R2 maps from crossvalidation (saved for every run) as nii:
     if np.greater(cfg.varNumXval, 1):
+
         # truncate extremely negative R2 values
         aryBstR2Single[np.where(np.less_equal(aryBstR2Single, -1.0))] = -1.0
 
-        # Place voxels based on low-variance exlusion:
-        aryPrfRes01 = np.zeros((varNumVoxMsk, cfg.varNumXval),
-                               dtype=np.float32)
+        # List with name suffices of output images:
+        lstNiiNames = ['_R2_single']
 
-        for indDim in range(cfg.varNumXval):
-            aryPrfRes01[aryLgcVar, indDim] = aryBstR2Single[:, indDim]
+        # Create full path names from nii file names and output path
+        lstNiiNames = [cfg.strPathOut + strNii + '.nii.gz' for strNii in
+                       lstNiiNames]
 
-        # Place voxels based on mask-exclusion:
-        aryPrfRes02 = np.zeros((varNumVoxTlt, cfg.varNumXval),
-                               dtype=np.float32)
-        for indDim in range(cfg.varNumXval):
-            aryPrfRes02[aryLgcMsk, indDim] = aryPrfRes01[:, indDim]
+        # export R2 maps as a single 4D nii file
+        export_nii(aryBstR2Single, lstNiiNames, aryLgcMsk, aryLgcVar,
+                   tplNiiShp, aryAff, hdrMsk, outFormat='4D')
 
-        # Reshape pRF finding results into original image dimensions:
-        aryR2snglRes = np.reshape(aryPrfRes02,
-                                  [tplNiiShp[0],
-                                   tplNiiShp[1],
-                                   tplNiiShp[2],
-                                   cfg.varNumXval])
-
-        del(aryPrfRes01)
-        del(aryPrfRes02)
-
-        # adjust header
-        hdrMsk.set_data_shape(aryR2snglRes.shape)
-
-        # Create nii object for results:
-        niiOut = nb.Nifti1Image(aryR2snglRes,
-                                aryAff,
-                                header=hdrMsk
-                                )
-        # Save nii:
-        strTmp = (cfg.strPathOut + '_R2_single' + '.nii.gz')
-        nb.save(niiOut, strTmp)
-
-    # *************************************************************************
-
-    # *************************************************************************
-    # *** Report time
+    # %% Report time
 
     varTme02 = time.time()
     varTme03 = varTme02 - varTme01
     print('---Elapsed time: ' + str(varTme03) + ' s')
     print('---Done.')
-    # *************************************************************************

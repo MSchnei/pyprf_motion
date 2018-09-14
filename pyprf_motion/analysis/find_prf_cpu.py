@@ -88,7 +88,7 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
     vecBstXpos = np.zeros(varNumVoxChnk, dtype=aryMdlParams.dtype)
     vecBstYpos = np.zeros(varNumVoxChnk, dtype=aryMdlParams.dtype)
     vecBstSd = np.zeros(varNumVoxChnk, dtype=aryMdlParams.dtype)
-    # vecBstR2 = np.zeros(varNumVoxChnk)
+    vecBstExp = np.zeros(varNumVoxChnk, dtype=aryMdlParams.dtype)
 
     # Vector for best R-square value. For each model fit, the R-square value is
     # compared to this, and updated if it is lower than the best-fitting
@@ -294,6 +294,7 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
             vecBstXpos[vecLgcTmpRes] = aryMdlParams[idxMdl, 0]
             vecBstYpos[vecLgcTmpRes] = aryMdlParams[idxMdl, 1]
             vecBstSd[vecLgcTmpRes] = aryMdlParams[idxMdl, 2]
+            vecBstExp[vecLgcTmpRes] = aryMdlParams[idxMdl, 3]
 
             # Replace best mean residual values:
             vecBstRes[vecLgcTmpRes] = vecTmpRes[vecLgcTmpRes]
@@ -393,6 +394,7 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
                   vecBstXpos,
                   vecBstYpos,
                   vecBstSd,
+                  vecBstExp,
                   vecBstR2,
                   aryBstR2fld]
 
@@ -419,6 +421,7 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
                   vecBstXpos,
                   vecBstYpos,
                   vecBstSd,
+                  vecBstExp,
                   vecBstR2]
 
         queOut.put(lstOut)

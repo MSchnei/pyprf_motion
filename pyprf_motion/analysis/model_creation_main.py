@@ -40,17 +40,15 @@ def model_creation(dicCnfg):
         4D numpy array with pRF time course models, with following dimensions:
         `aryPrfTc[x-position, y-position, SD, volume]`.
     """
-    # *************************************************************************
-    # *** Load parameters from config file
+
+    # %% Load parameters from config file
 
     # Load config parameters from dictionary into namespace:
     cfg = cls_set_config(dicCnfg)
-    # *************************************************************************
 
     if cfg.lgcCrteMdl:
 
-        # *********************************************************************
-        # *** Load spatial condition information
+        # %% Load spatial condition information
 
         print('------Load spatial condition information')
 
@@ -65,34 +63,28 @@ def model_creation(dicCnfg):
         # arySptExpInf by 90 degrees rightward. This will insure that with the
         # 0th axis we index the scientific x-axis and higher values move us to
         # the right on that x-axis. It will also ensure that the 1st
-        # python axis indexes the scientific y-axis and higher values will 
+        # python axis indexes the scientific y-axis and higher values will
         # move us up.
         arySptExpInf = np.rot90(arySptExpInf, k=3)
 
-        # *********************************************************************
-
-        # *********************************************************************
-        # *** Load temporal condition information
+        # %% Load temporal condition information
 
         print('------Load temporal condition information')
 
         aryTmpExpInf = np.load(cfg.strTmpExpInf)
-        # *********************************************************************
 
-        # *********************************************************************
-        # *** Create model parameter combination, for now in pixel.
+        # %% Create model parameter combination, for now in pixel.
+
         aryMdlParams = crt_mdl_prms((int(cfg.varVslSpcSzeX),
                                      int(cfg.varVslSpcSzeY)), cfg.varNum1,
                                     cfg.varExtXmin, cfg.varExtXmax,
                                     cfg.varNum2, cfg.varExtYmin,
                                     cfg.varExtYmax, cfg.varNumPrfSizes,
                                     cfg.varPrfStdMin, cfg.varPrfStdMax,
-                                    kwUnt='pix', kwCrd=cfg.strKwCrd)
+                                    cfg.lstExp, kwUnt='pix',
+                                    kwCrd=cfg.strKwCrd)
 
-        # *********************************************************************
-
-        # *********************************************************************
-        # *** Create 2D Gauss model responses to spatial conditions.
+        # %% Create 2D Gauss model responses to spatial conditions.
 
         print('------Create 2D Gauss model responses to spatial conditions')
 
@@ -101,20 +93,7 @@ def model_creation(dicCnfg):
                                 aryMdlParams, cfg.varPar)
         del(arySptExpInf)
 
-        # *********************************************************************
-
-        # *********************************************************************
-        # *** Compress the model responses
-
-        # This will make small responses close to 0 larger by a lot and will
-        # make large responses close to 1 larger by a bit
-        print('------Compress the model responses')
-        aryMdlRsp = np.power(aryMdlRsp, cfg.varExp)
-
-        # *********************************************************************
-
-        # *********************************************************************
-        # *** Create neural time courses in upsampled space
+        # %% Create neural time courses in upsampled space
 
         print('------Create temporally upsampled neural time courses')
 
@@ -123,10 +102,7 @@ def model_creation(dicCnfg):
         del(aryTmpExpInf)
         del(aryMdlRsp)
 
-        # *********************************************************************
-
-        # *********************************************************************
-        # *** Convolve every neural time course model with hrf function(s)
+        # %% Convolve every neural time course model with hrf function(s)
 
         print('------Create pRF time course models by HRF convolution')
 
@@ -136,10 +112,7 @@ def model_creation(dicCnfg):
                               cfg.varPar)
         del(aryNrlTc)
 
-        # *********************************************************************
-
-        # *********************************************************************
-        # *** Save pRF time course models
+        # %% Save pRF time course models
 
         print('------Save pRF time course models to disk')
 
@@ -161,13 +134,8 @@ def model_creation(dicCnfg):
         np.save(cfg.strPathMdl + "_params", aryMdlParams)
         del(aryMdlParams)
 
-        # *********************************************************************
-
-    else:
-
-        # *********************************************************************
         # %% Load existing pRF time course models
-
+    else:
         print('------Load pRF time course models from disk')
 
         # Load the file:
@@ -181,9 +149,7 @@ def model_creation(dicCnfg):
         strErrMsg = ('---Error: Dimensions of specified pRF time course ' +
                      'models do not agree with specified model parameters')
         assert vecPrfTcShp[0] == cfg.varNum1 * \
-            cfg.varNum2 * cfg.varNumPrfSizes and \
+            cfg.varNum2 * cfg.varNumPrfSizes * len(cfg.lstExp) and \
             vecPrfTcShp[1] == cfg.varNumVol, strErrMsg
-
-    # *************************************************************************
 
     return aryPrfTc
