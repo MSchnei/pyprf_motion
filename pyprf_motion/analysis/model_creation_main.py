@@ -95,8 +95,6 @@ def model_creation(dicCnfg):
 
         # %% Create pRF time courses
 
-        print('------Create pRF time courses')
-
         # Because first upsampling and then convolving the time course models
         # is a very memory-intense process, we divide it into batches and loop
         varNumMdls = aryMdlRsp.shape[0]
