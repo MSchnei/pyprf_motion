@@ -22,14 +22,14 @@ import numpy as np
 import multiprocessing as mp
 
 from pyprf_motion.analysis.load_config import load_config
-from pyprf_feature.analysis.utils_general import (cls_set_config, export_nii,
-                                                  joinRes)
+from pyprf_motion.analysis.utils_general import (cls_set_config, export_nii,
+                                                 joinRes)
 from pyprf_motion.analysis.model_creation_main import model_creation
 from pyprf_motion.analysis.model_creation_utils import crt_mdl_prms
 from pyprf_motion.analysis.prepare import prep_models, prep_func
 
 ###### DEBUGGING ###############
-#strCsvCnfg = "/media/sf_D_DRIVE/MotDepPrf/Analysis/S02/03_motLoc/pRF_results/S02_config_MotLoc_lstCmpr.csv"
+#strCsvCnfg = "/home/marian/Documents/Testing/test_pyprf_motion/S02_config_MotLoc_lstCmpr.csv"
 #lgcTest = False
 ################################
 

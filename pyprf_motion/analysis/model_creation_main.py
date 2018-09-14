@@ -93,24 +93,44 @@ def model_creation(dicCnfg):
                                 aryMdlParams, cfg.varPar)
         del(arySptExpInf)
 
-        # %% Create neural time courses in upsampled space
+        # %% Create pRF time courses
 
-        print('------Create temporally upsampled neural time courses')
+        print('------Create pRF time courses')
 
-        aryNrlTc = crt_nrl_tc(aryMdlRsp, aryTmpExpInf, cfg.varTr,
-                              cfg.varNumVol, cfg.varTmpOvsmpl)
+        # Because first upsampling and then convolving the time course models
+        # is a very memory-intense process, we divide it into batches and loop
+        varNumMdls = aryMdlRsp.shape[0]
+        # Set the maximum batch size, this is to not explode RAM
+        varBtchMaxSze = 150000.0
+        # Split aryMdlRsp into bacthes
+        lstMdlRsp = np.array_split(aryMdlRsp, int(varNumMdls/varBtchMaxSze))
+        # Delete array to save memory
+        del(aryMdlRsp)
+        # Prepare list to collect pRF time courses
+        lstPrfTc = []
+
+        # Loop over batches
+        for indBtc, aryMdlRsp in enumerate(lstMdlRsp):
+            print('------Create pRF time courses, Batch ' + str(indBtc) +
+                  ' out of ' + str(len(lstMdlRsp)))
+
+            # Create neural time courses in temporally upsampled space
+            aryNrlTc = crt_nrl_tc(aryMdlRsp, aryTmpExpInf, cfg.varTr,
+                                  cfg.varNumVol, cfg.varTmpOvsmpl)
+
+            # Convolve every neural time course model with hrf function(s)
+            # And append outcome to list
+            lstPrfTc.append(crt_prf_tc(aryNrlTc, cfg.varNumVol, cfg.varTr,
+                            cfg.varTmpOvsmpl, cfg.switchHrfSet,
+                            (int(cfg.varVslSpcSzeX), int(cfg.varVslSpcSzeY)),
+                            cfg.varPar).astype(np.float16))
         del(aryTmpExpInf)
         del(aryMdlRsp)
-
-        # %% Convolve every neural time course model with hrf function(s)
-
-        print('------Create pRF time course models by HRF convolution')
-
-        aryPrfTc = crt_prf_tc(aryNrlTc, cfg.varNumVol, cfg.varTr,
-                              cfg.varTmpOvsmpl, cfg.switchHrfSet,
-                              (int(cfg.varVslSpcSzeX), int(cfg.varVslSpcSzeY)),
-                              cfg.varPar)
         del(aryNrlTc)
+
+        # Turn list into array
+        aryPrfTc = np.stack(lstPrfTc, axis=0)
+        aryPrfTc = aryPrfTc.astype(np.float32)
 
         # %% Save pRF time course models
 
