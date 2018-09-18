@@ -80,7 +80,7 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
     varNumMdls = aryPrfTc.shape[0]
 
     # Number of voxels to be fitted in this chunk:
-    varNumVoxChnk = aryFuncChnk.shape[0]
+    varNumVoxChnk = aryFuncChnk.shape[-1]
 
     # Vectors for pRF finding results [number-of-voxels times one]:
     # make sure they have the same precision as aryMdlParams, since this
@@ -99,14 +99,6 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
     # residual values for every fold (not only mean across folds):
     if lgcXval:
         aryBstResFlds = np.zeros((varNumVoxChnk, varNumXval), dtype=np.float32)
-
-    # We reshape the voxel time courses, so that time goes down the column,
-    # i.e. from top to bottom.
-    aryFuncChnk = aryFuncChnk.T
-
-    # Change type to float 32:
-    aryFuncChnk = aryFuncChnk.astype(np.float32)
-    aryPrfTc = aryPrfTc.astype(np.float32)
 
     # if lgc for Xval is true we already prepare indices for xvalidation
     if lgcXval:
