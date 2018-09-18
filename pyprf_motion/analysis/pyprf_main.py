@@ -20,30 +20,26 @@
 import time
 import numpy as np
 import multiprocessing as mp
-
-from pyprf_motion.analysis.load_config import load_config
-from pyprf_motion.analysis.utils_general import (cls_set_config, export_nii,
-                                                 joinRes)
+from pyprf_motion.analysis.utils_general import export_nii, joinRes
 from pyprf_motion.analysis.model_creation_main import model_creation
 from pyprf_motion.analysis.model_creation_utils import crt_mdl_prms
 from pyprf_motion.analysis.prepare import prep_models, prep_func
 
-###### DEBUGGING ###############
-#strCsvCnfg = "/home/marian/Documents/Testing/test_pyprf_motion/S02_config_MotLoc_lstCmpr.csv"
-#lgcTest = False
-################################
 
-def pyprf(strCsvCnfg, lgcTest=False):  #noqa
+def pyprf(cfg, lgcTest=False, strExpSve=''):
     """
     Main function for pRF mapping.
 
     Parameters
     ----------
-    strCsvCnfg : str
-        Absolute file path of config file.
+    cfg : namespace
+        Namespace containing variables from config file.
     lgcTest : Boolean
         Whether this is a test (pytest). If yes, absolute path of pyprf libary
         will be prepended to config file paths.
+    strExpSve : str
+        String to add to path for export of results in nii. This is used to
+        differentiate different results from different exponents.
     """
 
     # %% Check time
@@ -51,12 +47,6 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     varTme01 = time.time()
 
     # %% Preparations
-
-    # Load config parameters from csv file into dictionary:
-    dicCnfg = load_config(strCsvCnfg, lgcTest=lgcTest)
-
-    # Load config parameters from dictionary into namespace:
-    cfg = cls_set_config(dicCnfg)
 
     # Conditional imports:
     if cfg.strVersion == 'gpu':
@@ -69,7 +59,7 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     cfg.varSdSmthTmp = np.divide(cfg.varSdSmthTmp, cfg.varTr)
 
     # Create or load pRF time course models
-    aryPrfTc = model_creation(dicCnfg)
+    aryPrfTc = model_creation(cfg)
 
     # %% Preprocessing
 
@@ -131,6 +121,8 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
     # Create a queue to put the results in:
     queOut = mp.Queue()
 
+    # Change type of functional data to float 32:
+    aryFunc = aryFunc.astype(np.float32)
     # Create list with chunks of functional data for the parallel processes:
     lstFunc = np.array_split(aryFunc, cfg.varPar)
     # We don't need the original array with the functional data anymore:
@@ -157,7 +149,7 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
         for idxPrc in range(0, cfg.varPar):
             lstPrcs[idxPrc] = mp.Process(target=find_prf_cpu,
                                          args=(idxPrc,
-                                               lstFunc[idxPrc],
+                                               lstFunc[idxPrc].T,
                                                aryPrfTc,
                                                aryMdlParams,
                                                cfg.strVersion,
@@ -178,7 +170,7 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
             lstPrcs[idxPrc] = mp.Process(target=find_prf_gpu,
                                          args=(idxPrc,
                                                aryMdlParams,
-                                               lstFunc[idxPrc],
+                                               lstFunc[idxPrc].T,
                                                aryPrfTc,
                                                queOut)
                                          )
@@ -242,8 +234,8 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
                    '_eccentricity']
 
     # Create full path names from nii file names and output path
-    lstNiiNames = [cfg.strPathOut + strNii + '.nii.gz' for strNii in
-                   lstNiiNames]
+    lstNiiNames = [cfg.strPathOut + strNii + strExpSve + '.nii.gz' for strNii
+                   in lstNiiNames]
 
     # export map results as seperate 3D nii files
     export_nii(aryBstMaps, lstNiiNames, aryLgcMsk, aryLgcVar, tplNiiShp,
@@ -260,8 +252,8 @@ def pyprf(strCsvCnfg, lgcTest=False):  #noqa
         lstNiiNames = ['_R2_single']
 
         # Create full path names from nii file names and output path
-        lstNiiNames = [cfg.strPathOut + strNii + '.nii.gz' for strNii in
-                       lstNiiNames]
+        lstNiiNames = [cfg.strPathOut + strNii + strExpSve + '.nii.gz' for
+                       strNii in lstNiiNames]
 
         # export R2 maps as a single 4D nii file
         export_nii(aryBstR2Single, lstNiiNames, aryLgcMsk, aryLgcVar,
