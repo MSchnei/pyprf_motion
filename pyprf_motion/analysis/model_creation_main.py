@@ -25,14 +25,14 @@ from pyprf_motion.analysis.model_creation_utils import (crt_mdl_prms,
                                                         crt_prf_tc)
 
 
-def model_creation(dicCnfg):
+def model_creation(cfg):
     """
     Create or load pRF model time courses.
 
     Parameters
     ----------
-    dicCnfg : dict
-        Dictionary containing config parameters.
+    cfg : namespace
+        Namespace containing variables from config file.
 
     Returns
     -------
@@ -41,11 +41,9 @@ def model_creation(dicCnfg):
         `aryPrfTc[x-position, y-position, SD, volume]`.
     """
 
-    # %% Load parameters from config file
-
-    # Load config parameters from dictionary into namespace:
-    cfg = cls_set_config(dicCnfg)
-
+    # %% Create model time courses
+    # If desired by user in csv file or if exponents have been prvided via
+    # command line
     if cfg.lgcCrteMdl:
 
         # %% Load spatial condition information
@@ -127,7 +125,7 @@ def model_creation(dicCnfg):
         del(aryNrlTc)
 
         # Turn list into array
-        aryPrfTc = np.stack(lstPrfTc, axis=0)
+        aryPrfTc = np.concatenate(lstPrfTc, axis=0)
         aryPrfTc = aryPrfTc.astype(np.float32)
 
         # %% Save pRF time course models
