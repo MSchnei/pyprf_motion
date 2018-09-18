@@ -85,7 +85,7 @@ def rmp_deg_pixel_x_y_s(vecX, vecY, vecPrfSd, tplPngSize,
 
 def crt_mdl_prms(tplPngSize, varNum1, varExtXmin,  varExtXmax, varNum2,
                  varExtYmin, varExtYmax, varNumPrfSizes, varPrfStdMin,
-                 varPrfStdMax, kwUnt='pix', kwCrd='crt'):
+                 varPrfStdMax, lstExp, kwUnt='pix', kwCrd='crt'):
     """Create an array with all possible model parameter combinations
 
     Parameters
@@ -110,6 +110,8 @@ def crt_mdl_prms(tplPngSize, varNum1, varExtXmin,  varExtXmax, varNum2,
         Minimum pRF model size (standard deviation of 2D Gaussian)
     varPrfStdMax : float, positive
         Maximum pRF model size (standard deviation of 2D Gaussian)
+    lstExp: list of floats
+        List of exponents that shoud be used for static nonlinearity
     kwUnt: str
         Keyword to set the unit for model parameter combinations; model
         parameters can be in pixels ["pix"] or degrees of visual angles ["deg"]
@@ -125,16 +127,22 @@ def crt_mdl_prms(tplPngSize, varNum1, varExtXmin,  varExtXmax, varNum2,
     [1]
     """
 
+    # Turn list of exponents into numpy array
+    vecExp = np.array(lstExp)
+
+    # Get number of exponents
+    varNumExp = vecExp.shape[0]
+
     # Number of pRF models to be created (i.e. number of possible
     # combinations of x-position, y-position, and standard deviation):
-    varNumMdls = varNum1 * varNum2 * varNumPrfSizes
+    varNumMdls = varNum1 * varNum2 * varNumPrfSizes * varNumExp
 
     # Array for the x-position, y-position, and standard deviations for
     # which pRF model time courses are going to be created, where the
     # columns correspond to: (1) the x-position, (2) the y-position, and
     # (3) the standard deviation. The parameters are in units of the
     # upsampled visual space.
-    aryMdlParams = np.zeros((varNumMdls, 3), dtype=np.float64)
+    aryMdlParams = np.zeros((varNumMdls, 4), dtype=np.float64)
 
     # Counter for parameter array:
     varCntMdlPrms = 0
@@ -179,13 +187,17 @@ def crt_mdl_prms(tplPngSize, varNum1, varExtXmin,  varExtXmax, varNum2,
                 # Loop through standard deviations (of Gaussian pRF models):
                 for idxSd in range(0, varNumPrfSizes):
 
-                    # Place index and parameters in array:
-                    aryMdlParams[varCntMdlPrms, 0] = vecX[idxX]
-                    aryMdlParams[varCntMdlPrms, 1] = vecY[idxY]
-                    aryMdlParams[varCntMdlPrms, 2] = vecPrfSd[idxSd]
+                    # Loop through the exponents for static nonlinearity:
+                    for idxE in range(0, varNumExp):
 
-                    # Increment parameter index:
-                    varCntMdlPrms += 1
+                        # Place index and parameters in array:
+                        aryMdlParams[varCntMdlPrms, 0] = vecX[idxX]
+                        aryMdlParams[varCntMdlPrms, 1] = vecY[idxY]
+                        aryMdlParams[varCntMdlPrms, 2] = vecPrfSd[idxSd]
+                        aryMdlParams[varCntMdlPrms, 3] = vecExp[idxE]
+
+                        # Increment parameter index:
+                        varCntMdlPrms += 1
 
     elif kwCrd == 'pol':
 
@@ -231,13 +243,17 @@ def crt_mdl_prms(tplPngSize, varNum1, varExtXmin,  varExtXmax, varNum2,
             # Loop through standard deviations (of Gaussian pRF models):
             for idxSd in range(0, varNumPrfSizes):
 
-                # Place index and parameters in array:
-                aryMdlParams[varCntMdlPrms, 0] = vecX[idxXY]
-                aryMdlParams[varCntMdlPrms, 1] = vecY[idxXY]
-                aryMdlParams[varCntMdlPrms, 2] = vecPrfSd[idxSd]
+                # Loop through the exponents for static nonlinearity:
+                for idxE in range(0, varNumExp):
 
-                # Increment parameter index:
-                varCntMdlPrms += 1
+                    # Place index and parameters in array:
+                    aryMdlParams[varCntMdlPrms, 0] = vecX[idxXY]
+                    aryMdlParams[varCntMdlPrms, 1] = vecY[idxXY]
+                    aryMdlParams[varCntMdlPrms, 2] = vecPrfSd[idxSd]
+                    aryMdlParams[varCntMdlPrms, 3] = vecExp[idxE]
+
+                    # Increment parameter index:
+                    varCntMdlPrms += 1
 
     else:
         print('Unknown keyword provided for coordinate system for model ' +

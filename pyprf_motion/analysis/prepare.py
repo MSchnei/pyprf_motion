@@ -65,7 +65,7 @@ def funcSmthTmp(aryPrfTc, varSdSmthTmp):
     aryPrfTc = aryPrfTc[..., 1:-1]
 
     # Output array:
-    return aryPrfTc.reshape(tplInpShp).astype('float16')
+    return aryPrfTc.reshape(tplInpShp)
 
 
 def prep_models(aryPrfTc, varSdSmthTmp=1.0):

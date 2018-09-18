@@ -80,7 +80,7 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
     varNumMdls = aryPrfTc.shape[0]
 
     # Number of voxels to be fitted in this chunk:
-    varNumVoxChnk = aryFuncChnk.shape[0]
+    varNumVoxChnk = aryFuncChnk.shape[-1]
 
     # Vectors for pRF finding results [number-of-voxels times one]:
     # make sure they have the same precision as aryMdlParams, since this
@@ -88,7 +88,7 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
     vecBstXpos = np.zeros(varNumVoxChnk, dtype=aryMdlParams.dtype)
     vecBstYpos = np.zeros(varNumVoxChnk, dtype=aryMdlParams.dtype)
     vecBstSd = np.zeros(varNumVoxChnk, dtype=aryMdlParams.dtype)
-    # vecBstR2 = np.zeros(varNumVoxChnk)
+    vecBstExp = np.zeros(varNumVoxChnk, dtype=aryMdlParams.dtype)
 
     # Vector for best R-square value. For each model fit, the R-square value is
     # compared to this, and updated if it is lower than the best-fitting
@@ -99,14 +99,6 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
     # residual values for every fold (not only mean across folds):
     if lgcXval:
         aryBstResFlds = np.zeros((varNumVoxChnk, varNumXval), dtype=np.float32)
-
-    # We reshape the voxel time courses, so that time goes down the column,
-    # i.e. from top to bottom.
-    aryFuncChnk = aryFuncChnk.T
-
-    # Change type to float 32:
-    aryFuncChnk = aryFuncChnk.astype(np.float32)
-    aryPrfTc = aryPrfTc.astype(np.float32)
 
     # if lgc for Xval is true we already prepare indices for xvalidation
     if lgcXval:
@@ -294,6 +286,7 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
             vecBstXpos[vecLgcTmpRes] = aryMdlParams[idxMdl, 0]
             vecBstYpos[vecLgcTmpRes] = aryMdlParams[idxMdl, 1]
             vecBstSd[vecLgcTmpRes] = aryMdlParams[idxMdl, 2]
+            vecBstExp[vecLgcTmpRes] = aryMdlParams[idxMdl, 3]
 
             # Replace best mean residual values:
             vecBstRes[vecLgcTmpRes] = vecTmpRes[vecLgcTmpRes]
@@ -393,6 +386,7 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
                   vecBstXpos,
                   vecBstYpos,
                   vecBstSd,
+                  vecBstExp,
                   vecBstR2,
                   aryBstR2fld]
 
@@ -419,6 +413,7 @@ def find_prf_cpu(idxPrc, aryFuncChnk, aryPrfTc, aryMdlParams, strVersion,
                   vecBstXpos,
                   vecBstYpos,
                   vecBstSd,
+                  vecBstExp,
                   vecBstR2]
 
         queOut.put(lstOut)

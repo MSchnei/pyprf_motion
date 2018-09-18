@@ -1,15 +1,32 @@
 # -*- coding: utf-8 -*-
 """Load py_pRF_mapping config file."""
 
+# Part of pyprf_motion library
+# Copyright (C) 2018  Marian Schneider, Ingo Marquardt
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import os
 import csv
 import ast
+import numpy as np
 
 # Get path of this file:
 strDir = os.path.dirname(os.path.abspath(__file__))
 
 
-def load_config(strCsvCnfg, lgcTest=False):
+def load_config(strCsvCnfg, lgcTest=False, lgcExpCmd=False):
     """
     Load py_pRF_mapping config file.
 
@@ -20,6 +37,9 @@ def load_config(strCsvCnfg, lgcTest=False):
     lgcTest : Boolean
         Whether this is a test (pytest). If yes, absolute path of this function
         will be prepended to config file paths.
+    lgcExpCmd: Boolean
+        Whether a list of exponents was provided via command line. In this
+        case, do not print exponents from csv file as they will be unused.
 
     Returns
     -------
@@ -139,10 +159,12 @@ def load_config(strCsvCnfg, lgcTest=False):
     if lgcPrint:
         print('---Maximum pRF model size: ' + str(dicCnfg['varPrfStdMax']))
 
-    # Exponent for compression or expansion of model responses
-    dicCnfg['varExp'] = float(dicCnfg['varExp'])
-    if lgcPrint:
-        print('---Exponent for responses: ' + str(dicCnfg['varExp']))
+    # List of exponents for compression or expansion of model responses
+    if not lgcExpCmd:
+        dicCnfg['lstExp'] = ast.literal_eval(dicCnfg['lstExp'])
+        dicCnfg['lstExp'] = [float(i) for i in dicCnfg['lstExp']]
+        if lgcPrint:
+            print('---Exponents for nonlinearity: ' + str(dicCnfg['lstExp']))
 
     # Volume TR of input data [s]:
     dicCnfg['varTr'] = float(dicCnfg['varTr'])
@@ -237,28 +259,24 @@ def load_config(strCsvCnfg, lgcTest=False):
         print('---Model fitting will have this number of folds for xval: '
               + str(dicCnfg['varNumXval']))
 
-    # If we create new pRF time course models, the following parameters have to
-    # be provided:
-    if dicCnfg['lgcCrteMdl']:
+    # Name of the npy that holds spatial info about conditions
+    dicCnfg['strSptExpInf'] = ast.literal_eval(dicCnfg['strSptExpInf'])
+    if lgcPrint:
+        print('---Path to npy file with spatial condition info: ')
+        print('   ' + str(dicCnfg['strSptExpInf']))
 
-        # Name of the npy that holds spatial info about conditions
-        dicCnfg['strSptExpInf'] = ast.literal_eval(dicCnfg['strSptExpInf'])
-        if lgcPrint:
-            print('---Path to npy file with spatial condition info: ')
-            print('   ' + str(dicCnfg['strSptExpInf']))
+    # Name of the npy that holds temporal info about conditions
+    dicCnfg['strTmpExpInf'] = ast.literal_eval(dicCnfg['strTmpExpInf'])
+    if lgcPrint:
+        print('---Path to npy file with temporal condition info: ')
+        print('   ' + str(dicCnfg['strTmpExpInf']))
 
-        # Name of the npy that holds temporal info about conditions
-        dicCnfg['strTmpExpInf'] = ast.literal_eval(dicCnfg['strTmpExpInf'])
-        if lgcPrint:
-            print('---Path to npy file with temporal condition info: ')
-            print('   ' + str(dicCnfg['strTmpExpInf']))
-
-        # Factor by which time courses and HRF will be upsampled for the
-        # convolutions
-        dicCnfg['varTmpOvsmpl'] = ast.literal_eval(dicCnfg['varTmpOvsmpl'])
-        if lgcPrint:
-            print('---Factor by which time courses and HRF will be upsampled: '
-                  + str(dicCnfg['varTmpOvsmpl']))
+    # Factor by which time courses and HRF are upsampled for the
+    # convolutions
+    dicCnfg['varTmpOvsmpl'] = ast.literal_eval(dicCnfg['varTmpOvsmpl'])
+    if lgcPrint:
+        print('---Factor by which time courses and HRF are upsampled: '
+              + str(dicCnfg['varTmpOvsmpl']))
 
     # Is this a test?
     if lgcTest:
