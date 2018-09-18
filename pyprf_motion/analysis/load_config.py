@@ -26,7 +26,7 @@ import numpy as np
 strDir = os.path.dirname(os.path.abspath(__file__))
 
 
-def load_config(strCsvCnfg, lgcTest=False):
+def load_config(strCsvCnfg, lgcTest=False, lgcExpCmd=False):
     """
     Load py_pRF_mapping config file.
 
@@ -37,6 +37,9 @@ def load_config(strCsvCnfg, lgcTest=False):
     lgcTest : Boolean
         Whether this is a test (pytest). If yes, absolute path of this function
         will be prepended to config file paths.
+    lgcExpCmd: Boolean
+        Whether a list of exponents was provided via command line. In this
+        case, do not print exponents from csv file as they will be unused.
 
     Returns
     -------
@@ -157,10 +160,11 @@ def load_config(strCsvCnfg, lgcTest=False):
         print('---Maximum pRF model size: ' + str(dicCnfg['varPrfStdMax']))
 
     # List of exponents for compression or expansion of model responses
-    dicCnfg['lstExp'] = ast.literal_eval(dicCnfg['lstExp'])
-    dicCnfg['lstExp'] = [float(i) for i in dicCnfg['lstExp']]
-    if lgcPrint:
-        print('---Exponents for nonlinearity: ' + str(dicCnfg['lstExp']))
+    if not lgcExpCmd:
+        dicCnfg['lstExp'] = ast.literal_eval(dicCnfg['lstExp'])
+        dicCnfg['lstExp'] = [float(i) for i in dicCnfg['lstExp']]
+        if lgcPrint:
+            print('---Exponents for nonlinearity: ' + str(dicCnfg['lstExp']))
 
     # Volume TR of input data [s]:
     dicCnfg['varTr'] = float(dicCnfg['varTr'])
@@ -255,28 +259,24 @@ def load_config(strCsvCnfg, lgcTest=False):
         print('---Model fitting will have this number of folds for xval: '
               + str(dicCnfg['varNumXval']))
 
-    # If we create new pRF time course models, the following parameters have to
-    # be provided:
-    if dicCnfg['lgcCrteMdl']:
+    # Name of the npy that holds spatial info about conditions
+    dicCnfg['strSptExpInf'] = ast.literal_eval(dicCnfg['strSptExpInf'])
+    if lgcPrint:
+        print('---Path to npy file with spatial condition info: ')
+        print('   ' + str(dicCnfg['strSptExpInf']))
 
-        # Name of the npy that holds spatial info about conditions
-        dicCnfg['strSptExpInf'] = ast.literal_eval(dicCnfg['strSptExpInf'])
-        if lgcPrint:
-            print('---Path to npy file with spatial condition info: ')
-            print('   ' + str(dicCnfg['strSptExpInf']))
+    # Name of the npy that holds temporal info about conditions
+    dicCnfg['strTmpExpInf'] = ast.literal_eval(dicCnfg['strTmpExpInf'])
+    if lgcPrint:
+        print('---Path to npy file with temporal condition info: ')
+        print('   ' + str(dicCnfg['strTmpExpInf']))
 
-        # Name of the npy that holds temporal info about conditions
-        dicCnfg['strTmpExpInf'] = ast.literal_eval(dicCnfg['strTmpExpInf'])
-        if lgcPrint:
-            print('---Path to npy file with temporal condition info: ')
-            print('   ' + str(dicCnfg['strTmpExpInf']))
-
-        # Factor by which time courses and HRF will be upsampled for the
-        # convolutions
-        dicCnfg['varTmpOvsmpl'] = ast.literal_eval(dicCnfg['varTmpOvsmpl'])
-        if lgcPrint:
-            print('---Factor by which time courses and HRF will be upsampled: '
-                  + str(dicCnfg['varTmpOvsmpl']))
+    # Factor by which time courses and HRF are upsampled for the
+    # convolutions
+    dicCnfg['varTmpOvsmpl'] = ast.literal_eval(dicCnfg['varTmpOvsmpl'])
+    if lgcPrint:
+        print('---Factor by which time courses and HRF are upsampled: '
+              + str(dicCnfg['varTmpOvsmpl']))
 
     # Is this a test?
     if lgcTest:
