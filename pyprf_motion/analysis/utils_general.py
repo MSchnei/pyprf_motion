@@ -238,6 +238,103 @@ def joinRes(lstPrfRes, varPar, idxPos, inFormat='1D'):
     return aryOut
 
 
+def cmp_res_R2(lstExp, lstNiiNames, strPathOut, posR2=4, lgcDel=False):
+    """"Compare results for different exponents and create winner nii.
+
+    Parameters
+    ----------
+    lstExp : list
+        List of floats containing the exponents that were tested for static
+        nonlinearity.
+    lstNiiNames : list
+        List of names of the different pRF maps (e.g. xpos, ypos, SD)
+    strPathOut : string
+        Path to the parent directory where the results should be saved.
+    posR2 : integer, position index
+        Position index of the R2 map. Index in the list with nii names.
+    lgcDel : boolean
+        Should inbetween results (in form of nii files) be deleted?
+
+    Notes
+    -----
+    [1] This function does not return any arrays but instead saves to disk.
+
+    """
+
+    print('---Compare results for different exponents')
+
+    # Get the names of the nii files with inbetween results
+    lstCmpRes = []
+    for indExp in range(len(lstExp)):
+        # Get strExpSve
+        strExpSve = '_' + str(lstExp[indExp])
+        # Create full path names from nii file names and output path
+        lstPthNames = [strPathOut + strNii + strExpSve + '.nii.gz' for
+                       strNii in lstNiiNames]
+        # Append list to list that contains nii names for all exponents
+        lstCmpRes.append(lstPthNames)
+
+    print('------Find exponent that yielded highest R2 per voxel')
+
+    # Initialize winner R2 maps
+    aryWnrR2 = np.zeros(nb.load(lstCmpRes[0][0]).shape)
+    aryExpMap = np.zeros(nb.load(lstCmpRes[0][0]).shape)
+
+    # Loop over R2 maps to establish which exponents wins
+    for indExp, lstMaps in zip(lstExp, lstCmpRes):
+        # Load R2 map for this particular exponent
+        aryTmpR2 = load_nii(lstMaps[posR2])[0]
+        # Get logical that tells us where current R2 map is greater than
+        # previous ones
+        aryLgcTmpRes = np.greater(aryTmpR2, aryWnrR2)
+        # Replace values of R2, where current R2 map was greater
+        aryWnrR2[aryLgcTmpRes] = np.copy(aryTmpR2[aryLgcTmpRes])
+        # Remember the index of the exponent that gave rise to this new R2
+        aryExpMap[aryLgcTmpRes] = indExp
+
+    # Initiliaze list with winner maps
+    lstExpMap = [np.zeros(nb.load(lstCmpRes[0][0]).shape)] * len(lstCmpRes[0])
+
+    # Compose other maps by assigning map from exponent that was greatest for
+    # every voxel
+    for indExp, lstMaps in zip(lstExp, lstCmpRes):
+        # Find out where this exponent won in terms of R2
+        lgcWinnerMap = [aryExpMap == indExp][0]
+        # Loop over all the maps
+        for indMap, _ in enumerate(lstMaps):
+            # Load map for this particular exponent
+            aryTmpMap = load_nii(lstMaps[indMap])[0]
+            # Load current winner map from array
+            aryCrrWnrMap = np.copy(lstExpMap[indMap])
+            # Assign values in temporary map to current winner map for voxels
+            # where this exp won
+            aryCrrWnrMap[lgcWinnerMap] = np.copy(aryTmpMap[lgcWinnerMap])
+            lstExpMap[indMap] = aryCrrWnrMap
+
+    print('------Export results as nii')
+
+    # Save winner maps as nii files
+    # Get header and affine array
+    hdrMsk, aryAff = load_nii(lstMaps[posR2])[1:]
+    # Loop over all the maps
+    for indMap, aryMap in enumerate(lstExpMap):
+        # Create nii object for results:
+        niiOut = nb.Nifti1Image(aryMap,
+                                aryAff,
+                                header=hdrMsk
+                                )
+        # Save nii:
+        strTmp = strPathOut + '_cmpr' + lstNiiNames[indMap] + '.nii.gz'
+        nb.save(niiOut, strTmp)
+
+    # Delete all the inbetween results, if desired by user
+    if lgcDel:
+        lstCmpRes = [item for sublist in lstCmpRes for item in sublist]
+        print('------Delete in-between results')
+        for strMap in lstCmpRes[:]:
+            os.remove(strMap)
+
+
 def map_crt_to_pol(aryXCrds, aryYrds):
     """Remap coordinates from cartesian to polar
 
