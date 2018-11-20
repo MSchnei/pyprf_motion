@@ -13,7 +13,7 @@ with open('README.rst') as f:
     long_description = f.read()
 
 setup(name='pyprf_motion',
-      version='1.0.3',
+      version='1.0.4',
       description=('Population receptive field analysis for motion-sensitive \
                     early- and mid-level visual cortex.'),
       url='https://github.com/MSchnei/pyprf_motion',
