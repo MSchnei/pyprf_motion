@@ -363,12 +363,24 @@ def crt_nrl_tc(aryMdlRsp, aryTmpExpInf, varTr, varNumVol, varTmpOvsmpl):
     tplInpShp = aryMdlRsp.shape
     aryMdlRsp = aryMdlRsp.reshape((-1, aryMdlRsp.shape[-1]))
 
+    # the first spatial condition might code the baseline (blank periods) with
+    # all zeros. If this is the case, remove the first spatial condition, since
+    # for temporal conditions this is removed automatically below and we need
+    # temporal and sptial conditions to maych
+    if np.all(aryMdlRsp[:, 0] == 0):
+        print('------------Removed first spatial condition (all zeros)')
+        aryMdlRsp = aryMdlRsp[:, 1:]
+
     # create boxcar functions in temporally upsampled space
     print('---------Create boxcar functions for spatial condtions')
     aryBxCarTmp = create_boxcar(aryTmpExpInf[:, 0], aryTmpExpInf[:, 1],
                                 aryTmpExpInf[:, 2], varTr, varNumVol,
                                 aryExclCnd=np.array([0.]),
                                 varTmpOvsmpl=varTmpOvsmpl).T
+
+    # Make sure that aryMdlRsp and aryBxCarTmp have the same number of
+    # conditions
+    assert aryMdlRsp.shape[-1] == aryBxCarTmp.shape[0]
 
     # pre-allocate pixelwise boxcar array
     aryNrlTc = np.zeros((aryMdlRsp.shape[0], aryBxCarTmp.shape[-1]),
