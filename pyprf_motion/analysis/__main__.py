@@ -58,14 +58,14 @@ def main():
 
     # Proceed depending on command line input
     if strCsvCnfg is None:
-        print('Option 01')
         # If no config argument was provided
+        print('Option 01')
         print('Please provide the file path to a config file, e.g.:')
         print('   pyprf_motion -config /path/to/my_config_file.csv')
 
     elif strCsvCnfg is not None and objNspc.compr is None:
-        print('Option 02')
         # If config argument but no compr argument was provided
+        print('Option 02')
 
         # Signal non-test mode to lower functions (needed for pytest):
         lgcTest = False
@@ -77,8 +77,8 @@ def main():
         pyprf(cfg, lgcTest=lgcTest, strExpSve='')
 
     elif strCsvCnfg is not None and objNspc.compr is not None:
-        print('Option 03')
         # If config argument and compr argument were provided
+        print('Option 03')
 
         # Signal non-test mode to lower functions (needed for pytest):
         lgcTest = False

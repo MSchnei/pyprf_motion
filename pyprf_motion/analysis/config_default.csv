@@ -55,6 +55,7 @@ varPrfStdMax = 14.0
 
 # List of exponents for compression or expansion of model responses
 # Set to [1.0] if no compression/expansion should be applied
+# This will be ignored if exponents are provided via command line
 lstExp = [0.2, 0.5, 1.0]
 
 # Volume TR of input data [s]:
