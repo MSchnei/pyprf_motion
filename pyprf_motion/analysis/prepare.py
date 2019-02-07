@@ -114,7 +114,7 @@ def prep_models(aryPrfTc, varSdSmthTmp=1.0):
     return aryPrfTc
 
 
-def prep_func(strPathNiiMask, lstPathNiiFunc, varAvgThr=100.,
+def prep_func(strPathNiiMask, lstPathNiiFunc, varAvgThr=-100.,
               varVarThr=0.0001):
     """
     Load & prepare functional data.
