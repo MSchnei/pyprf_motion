@@ -22,7 +22,7 @@ from functools import partial
 import numpy as np
 import scipy.stats as sps
 from scipy.interpolate import interp1d
-
+from scipy.signal import fftconvolve
 
 def spm_hrf_compat(t,
                    peak_delay=6,
@@ -321,8 +321,11 @@ def cnvl_tc(idxPrc, aryPrfTcChunk, lstHrf, varTr, varNumVol, varTmpOvsmpl,
 
         # *** convolve
         for indBase, base in enumerate(lstBse):
-            # perform the convolution
-            col = np.convolve(base, vecTcUps, mode='full')[:vecTcUps.size]
+            # Make sure base and vecTcUps are float64 to avoid overflow
+            base = base.astype(np.float64)
+            vecTcUps = vecTcUps.astype(np.float64)
+            # Perform the convolution (previously: np.convolve)
+            col = fftconvolve(base, vecTcUps, mode='full')[:vecTcUps.size]
             # get function for downsampling
             f = interp1d(vecFrmTms, col)
             # downsample to original resoltuion to match res of data
